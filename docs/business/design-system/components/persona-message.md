@@ -14,7 +14,7 @@ A council member's opinion bubble. First-person voice. Includes persona mark, na
   <div class="body">
     I would request changes because the current chunking strategy does not preserve section boundaries.
   </div>
-  <!-- CitationBlock(s) here -->
+  <!-- CodeCitation here -->
 </article>
 ```
 

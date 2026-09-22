@@ -55,14 +55,17 @@ Use Lucide (lucide.dev) at `layout-icon` (16px) with a 1.5px stroke and `current
 
 ## Status and verdict language
 
-Three verdicts and four source states, each mapped to exactly one semantic colour. Never reuse `accent` for any of these.
+Three verdicts and four source states. Never reuse `accent` for any of these.
+
+- `comment` is deliberately neutral, not blue — a third loud colour would flatten the two that are actual decisions (`approve`, `request_changes`).
+- `pending` and `indexing` share one appearance on purpose — same info blue, same pulsing dot. The word carries the difference; the progress bar is what makes a running job look different from a queued one. Pending never renders a progress bar.
 
 | Kind | Value | Semantic | CSS class |
 |------|-------|----------|-----------|
 | Verdict | `approve` | success | `verdict--approve` |
 | Verdict | `request_changes` | danger | `verdict--request-changes` |
-| Verdict | `comment` | info | `verdict--comment` |
-| Source status | `pending` | neutral (no tint) | `status--pending` |
+| Verdict | `comment` | neutral (`text-secondary` on `bg-sunken`) | `verdict--comment` |
+| Source status | `pending` | info (same as indexing) | `status--pending` |
 | Source status | `indexing` | info | `status--indexing` |
 | Source status | `ready` | success | `status--ready` |
 | Source status | `error` | danger | `status--error` |
@@ -73,13 +76,14 @@ Pass the string value as sentence case in markup (`approve`, `request changes`, 
 
 | Component | Card | Purpose |
 |-----------|------|---------|
+| Button | [components/button.md](components/button.md) | Primary, secondary, ghost, and danger actions. |
 | Composer | [components/composer.md](components/composer.md) | Message input. **No routing toggle.** |
 | SourceListItem | [components/source-list-item.md](components/source-list-item.md) | One row in the knowledge-source rail. Four status states. |
 | PersonaMessage | [components/persona-message.md](components/persona-message.md) | A council member's opinion bubble. |
 | ChairBlock | [components/chair-block.md](components/chair-block.md) | Synthesis and overall verdict. |
 | VerdictBadge | [components/verdict-badge.md](components/verdict-badge.md) | Inline verdict chip. |
 | StatusChip | [components/status-chip.md](components/status-chip.md) | Source lifecycle indicator. |
-| CitationBlock | [components/citation-block.md](components/citation-block.md) | Evidence snippet with source link. |
+| CodeCitation | [components/code-citation.md](components/code-citation.md) | Evidence snippet with line numbers, syntax tokens, hit row. |
 | RetrievalMessage | [components/retrieval-message.md](components/retrieval-message.md) | Direct answer from simple retrieval. |
 
 ## Implementation constraints

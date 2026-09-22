@@ -5,10 +5,10 @@ The synthesis block. States a recommendation and the reason for it in one paragr
 ## Markup
 
 ```html
-<article class="chair-block">
-  <header class="chair-block__header">
-    <span class="chair-block__label">Recommendation</span>
-    <span class="verdict-badge verdict--comment mono-label">comment</span>
+<article class="dom-chair-block">
+  <header class="dom-chair-block__header">
+    <span class="dom-chair-block__label">Recommendation</span>
+    <span class="dom-verdict dom-verdict--comment mono-label">comment</span>
   </header>
   <div class="body-lg">
     The council recommends commenting rather than blocking: chunking can remain simple for v1 while the ADR documents a migration path to semantic splitting if retrieval quality degrades on code files.

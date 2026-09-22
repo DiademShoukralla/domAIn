@@ -5,11 +5,11 @@ A council member's opinion bubble. First-person voice. Includes persona mark, na
 ## Markup
 
 ```html
-<article class="persona-message">
-  <header class="persona-message__header">
-    <span class="persona-message__mark persona-message__mark--ux mono-label">ux</span>
-    <span class="persona-message__name persona-message__name--ux">UX</span>
-    <span class="verdict-badge verdict--request-changes mono-label">request changes</span>
+<article class="dom-persona-message">
+  <header class="dom-persona-message__header">
+    <span class="dom-persona-message__mark dom-persona-message__mark--ux mono-label">ux</span>
+    <span class="dom-persona-message__name dom-persona-message__name--ux">UX</span>
+    <span class="dom-verdict dom-verdict--request-changes mono-label">request changes</span>
   </header>
   <div class="body">
     I would request changes because the current chunking strategy does not preserve section boundaries.
@@ -22,9 +22,9 @@ A council member's opinion bubble. First-person voice. Includes persona mark, na
 
 | Persona | Mark class | Name class |
 |---------|-----------|------------|
-| UX | `persona-message__mark--ux` | `persona-message__name--ux` |
-| Dev experience | `persona-message__mark--dx` | `persona-message__name--dx` |
-| Business | `persona-message__mark--biz` | `persona-message__name--biz` |
+| UX | `dom-persona-message__mark--ux` | `dom-persona-message__name--ux` |
+| Dev experience | `dom-persona-message__mark--dx` | `dom-persona-message__name--dx` |
+| Business | `dom-persona-message__mark--biz` | `dom-persona-message__name--biz` |
 
 ## Do not
 

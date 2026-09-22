@@ -8,24 +8,24 @@ Exactly four status values. Do not invent additional states.
 
 | Value | Display | Semantic class | Notes |
 |-------|---------|----------------|-------|
-| `pending` | Pending | `status--pending` | Same info blue + pulsing dot as indexing; no progress bar |
-| `indexing` | Indexing | `status--indexing` | Info blue + pulsing dot + progress bar |
-| `ready` | Ready | `status--ready` | |
-| `error` | Error | `status--error` | |
+| `pending` | Pending | `dom-status--pending` | Same info blue + pulsing dot as indexing; no progress bar |
+| `indexing` | Indexing | `dom-status--indexing` | Info blue + pulsing dot + progress bar |
+| `ready` | Ready | `dom-status--ready` | |
+| `error` | Error | `dom-status--error` | |
 
 Pass the raw status string from the API. CSS handles uppercase display.
 
 ## Markup
 
 ```html
-<div class="source-list-item">
-  <svg class="source-list-item__icon" aria-hidden="true"><!-- Lucide icon --></svg>
-  <div class="source-list-item__body">
-    <div class="source-list-item__title">domAIn</div>
-    <div class="source-list-item__meta">DiademShoukralla/domAIn</div>
+<div class="dom-source-list-item">
+  <svg class="dom-source-list-item__icon" aria-hidden="true"><!-- Lucide icon --></svg>
+  <div class="dom-source-list-item__body">
+    <div class="dom-source-list-item__title">domAIn</div>
+    <div class="dom-source-list-item__meta">DiademShoukralla/domAIn</div>
   </div>
-  <span class="status-chip status--ready">
-    <span class="status-chip__dot" aria-hidden="true"></span>
+  <span class="dom-status-chip dom-status--ready">
+    <span class="dom-status-chip__dot" aria-hidden="true"></span>
     <span class="mono-label">ready</span>
   </span>
 </div>

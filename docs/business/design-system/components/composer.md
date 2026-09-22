@@ -10,14 +10,14 @@ The message input at the bottom of the chat thread. Sends user messages to the u
 ## Markup
 
 ```html
-<form class="composer" role="form" aria-label="Send a message">
+<form class="dom-composer" role="form" aria-label="Send a message">
   <textarea
-    class="composer__input"
+    class="dom-composer__input"
     rows="1"
     placeholder="Ask a question or submit a proposal for review"
     aria-label="Message"
   ></textarea>
-  <button type="submit" class="composer__submit" aria-label="Send">
+  <button type="submit" class="dom-composer__submit" aria-label="Send">
     Send
   </button>
 </form>

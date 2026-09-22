@@ -62,13 +62,13 @@ Three verdicts and four source states. Never reuse `accent` for any of these.
 
 | Kind | Value | Semantic | CSS class |
 |------|-------|----------|-----------|
-| Verdict | `approve` | success | `verdict--approve` |
-| Verdict | `request_changes` | danger | `verdict--request-changes` |
-| Verdict | `comment` | neutral (`text-secondary` on `bg-sunken`) | `verdict--comment` |
-| Source status | `pending` | info (same as indexing) | `status--pending` |
-| Source status | `indexing` | info | `status--indexing` |
-| Source status | `ready` | success | `status--ready` |
-| Source status | `error` | danger | `status--error` |
+| Verdict | `approve` | success | `dom-verdict--approve` |
+| Verdict | `request_changes` | danger | `dom-verdict--request-changes` |
+| Verdict | `comment` | neutral (`text-secondary` on `bg-sunken`) | `dom-verdict--comment` |
+| Source status | `pending` | info (same as indexing) | `dom-status--pending` |
+| Source status | `indexing` | info | `dom-status--indexing` |
+| Source status | `ready` | success | `dom-status--ready` |
+| Source status | `error` | danger | `dom-status--error` |
 
 Pass the string value as sentence case in markup (`approve`, `request changes`, `indexing`). CSS uppercases display via `mono-label`.
 

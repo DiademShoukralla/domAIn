@@ -6,28 +6,28 @@ Primary interaction control. Four intents, three heights. One `primary` button p
 
 | Intent | Classes | Use |
 |--------|---------|-----|
-| Primary | `btn btn--primary` | The one forward action per view. Accent fill, `text-on-solid` label. |
-| Secondary | `btn btn--secondary` | Surface fill, `border-strong` outline. Confirmations, secondary paths. |
-| Ghost | `btn btn--ghost` | Transparent, `text-secondary`. Low-weight actions (cancel, dismiss). |
-| Danger | `btn btn--danger` | Danger fill, `text-on-solid`. Destructive actions (delete source). |
+| Primary | `dom-btn dom-btn--primary` | The one forward action per view. Accent fill, `text-on-solid` label. |
+| Secondary | `dom-btn dom-btn--secondary` | Surface fill, `border-strong` outline. Confirmations, secondary paths. |
+| Ghost | `dom-btn dom-btn--ghost` | Transparent, `text-secondary`. Low-weight actions (cancel, dismiss). |
+| Danger | `dom-btn dom-btn--danger` | Danger fill, `text-on-solid`. Destructive actions (delete source). |
 
 ## Heights
 
 | Size | Class | Height |
 |------|-------|--------|
-| Small | `btn--sm` | 28px (`layout-control-h-sm`) |
+| Small | `dom-btn--sm` | 28px (`layout-control-h-sm`) |
 | Default | (none) | 36px (`layout-control-h`) |
-| Large | `btn--lg` | 44px (`layout-control-h-lg`) |
+| Large | `dom-btn--lg` | 44px (`layout-control-h-lg`) |
 
-Combine intent and size: `btn btn--primary btn--sm`.
+Combine intent and size: `dom-btn dom-btn--primary dom-btn--sm`.
 
 ## Markup
 
 ```html
-<button type="button" class="btn btn--primary">Send</button>
-<button type="button" class="btn btn--secondary btn--sm">Cancel</button>
-<button type="button" class="btn btn--ghost">Dismiss</button>
-<button type="button" class="btn btn--danger">Delete source</button>
+<button type="button" class="dom-btn dom-btn--primary">Send</button>
+<button type="button" class="dom-btn dom-btn--secondary dom-btn--sm">Cancel</button>
+<button type="button" class="dom-btn dom-btn--ghost">Dismiss</button>
+<button type="button" class="dom-btn dom-btn--danger">Delete source</button>
 ```
 
 ## Behaviour
@@ -38,6 +38,6 @@ Combine intent and size: `btn btn--primary btn--sm`.
 
 ## Do not
 
-- Place more than one `btn--primary` in the same view.
+- Place more than one `dom-btn--primary` in the same view.
 - Use `accent` fill for non-primary intents.
 - Use danger for non-destructive actions.

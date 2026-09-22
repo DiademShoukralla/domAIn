@@ -75,7 +75,7 @@ Use **`init_chat_model`** from LangChain as the single LLM abstraction point.
 - LangChain is already a dependency for LangGraph; `init_chat_model` is the recommended unified entry point.
 - Avoids scattering provider-specific client initialization across the supervisor, persona nodes, and the synthesis chair.
 
-**Current default:** `anthropic:claude-sonnet-4-20250514` (or latest Sonnet at implementation time).
+**Current default:** `anthropic:claude-sonnet-5`.
 
 ### Retrieval fusion: RRF + coverage check
 

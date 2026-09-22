@@ -1,0 +1,124 @@
+# 5. Routing and coordination pattern
+
+Date: 2026-09-22
+
+## Status
+
+Accepted
+
+## Context
+
+domAIn exposes one unified chat surface — no mode selector in the Composer. The backend must classify user intent and route to the appropriate handler: a direct retrieval answer, a full council review, a greeting, or (stubbed) Linear read/write actions. Within the council path, three fixed personas debate and a chair synthesizes. These are two distinct coordination patterns at different graph levels.
+
+## Decision
+
+### Two-level coordination
+
+domAIn uses **two separate coordination patterns** in a nested graph:
+
+1. **Supervisor** (top-level) — classifies intent and routes to the correct subgraph or handler.
+2. **Orchestrator-worker** (nested, council subgraph) — fans out to three fixed personas, then the chair synthesizes.
+
+The supervisor and chair are **separate nodes** with different model tiers and different evaluability. Conflating them would make it impossible to test routing independently from synthesis quality.
+
+### Supervisor (top-level intent router)
+
+The supervisor is the entry node for every chat message. It classifies the user's message into one of five intents and routes accordingly:
+
+| Intent | Handler | Phase 1 status |
+|--------|---------|----------------|
+| `greeting` | Short conversational reply | Implemented |
+| `simple_retrieval` | Hybrid retrieval → single LLM answer with citations | Implemented |
+| `strategic_session` | Council subgraph (orchestrator-worker) | Implemented |
+| `linear_read` | Fetch/display Linear issue data | Stub |
+| `linear_write` | Update Linear issue via write-back | Stub |
+
+```
+User message
+     │
+     ▼
+ Supervisor (classify intent)
+     │
+     ├── greeting ──────────► Conversational reply
+     ├── simple_retrieval ──► RAG answer
+     ├── strategic_session ─► Council subgraph ──► CouncilDecision
+     ├── linear_read ───────► [stub] Not implemented
+     └── linear_write ──────► [stub] Not implemented
+```
+
+**Rationale:**
+
+- One chat surface means the user never selects a "mode." Intent classification is the only routing mechanism — confirmed in the design system: the Composer has **no routing toggle**.
+- Stubs for `linear_read` and `linear_write` reserve graph slots without blocking Phase 1 delivery. The supervisor returns a "not yet available" response for stub intents.
+- The supervisor uses a lightweight/fast model tier because classification is a simpler task than persona reasoning or chair synthesis.
+
+**Rejected alternatives:**
+
+- User-facing mode selector (Simple / Council toggle) — adds UI complexity and forces the user to predict which backend path they need. The redesign explicitly removed this.
+- Single graph with conditional persona skipping — conflates routing with council coordination; harder to test and evolve independently.
+
+### Orchestrator-worker (council subgraph)
+
+When the supervisor routes to `strategic_session`, the council subgraph runs:
+
+```
+ReviewRequest
+      │
+      ▼
+  Orchestrator ──┬──► UX Persona        ──► PersonaOpinion
+                 ├──► Dev Experience   ──► PersonaOpinion
+                 └──► Business/Product ──► PersonaOpinion
+                              │
+                              ▼
+                     Chair (synthesis) ──► CouncilDecision
+```
+
+- The orchestrator dispatches the same `ReviewRequest` to **exactly three persona nodes** in parallel.
+- This is a fixed fan-out, not dynamic routing. No node decides which other nodes to invoke or skip.
+- Each persona independently queries the knowledge layer and returns a `PersonaOpinion`.
+
+**Rationale:**
+
+- v1 always needs all three perspectives for strategic reviews. Dynamic routing (skip a persona, re-run one) adds graph complexity with no v1 use case.
+- Fixed fan-out is trivially parallelizable and easy to test (three independent LLM calls + one synthesis call).
+- LangGraph's `Send` API or a simple fan-out node handles this without a supervisor agent inside the subgraph.
+
+### LLM-based synthesis (chair)
+
+The chair node receives all three `PersonaOpinion` objects and uses an **LLM call** to produce `overall_verdict` and `synthesis`.
+
+**Rationale:**
+
+- The point of three personas is **nuanced disagreement** — a UX persona may `request_changes` while the business persona `approves`. A deterministic rule (e.g. `MIN(verdict_severity)`) would collapse that nuance into a single label and discard the reasoning that makes the council valuable.
+- The chair prompt instructs the LLM to weigh each opinion, identify consensus and conflict, and produce a reasoned overall verdict with a narrative synthesis.
+- The chair uses a higher-capability model tier than the supervisor because synthesis requires weighing conflicting evidence.
+
+**Rejected alternative:**
+
+- Rule-based aggregation (`worst verdict wins`, majority vote) — fast but produces shallow output that ignores reasoning quality and citation strength.
+
+### Supervisor vs. chair: why they are separate
+
+| | Supervisor | Chair |
+|---|-----------|-------|
+| **Job** | Classify intent, route | Synthesize three opinions |
+| **Input** | Raw user message | Three `PersonaOpinion` objects |
+| **Output** | Route label | `CouncilDecision` |
+| **Model tier** | Fast/lightweight | Capable/thorough |
+| **Eval** | Labeled intent classifier eval (~50–100 examples) | Phase 2 qualitative eval |
+| **Failure mode** | Wrong route (greeting sent to council) | Shallow or wrong synthesis |
+
+Merging them would couple routing accuracy to synthesis quality in testing and make it impossible to swap model tiers independently.
+
+### Routing is never user-facing
+
+The design system enforces this: the Composer component has **no routing toggle, no mode selector, no "Simple vs. Council" switch.** The user types a message; the supervisor decides the path. Implementation must not add UI controls that bypass or override supervisor routing.
+
+## Consequences
+
+- Unified chat UX with no mode selector simplifies the frontend and matches user mental models ("I ask domAIn a question").
+- Two-level coordination keeps routing testable independently from council quality.
+- Stub intents reserve graph structure for Phase 1.5 without blocking MVP.
+- LLM synthesis costs one additional LLM call per council review but produces meaningfully better output than rule-based aggregation.
+- Supervisor and chair model tiers can be tuned independently as usage data arrives.
+- The router eval dataset is a Phase 1 deliverable; persona output eval is explicitly Phase 2.

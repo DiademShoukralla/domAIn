@@ -1,0 +1,149 @@
+/*
+ * domAIn design tokens
+ * Load this file before components/bundle.css.
+ * Fonts (Inter, JetBrains Mono) are loaded by the host application.
+ */
+
+:root {
+  /* ── Colour: brand ── */
+  --color-accent: #d97706;
+  --color-accent-hover: #b45309;
+  --color-accent-surface: #fef3c7;
+  --color-accent-border: #fbbf24;
+
+  /* ── Colour: semantics ── */
+  --color-success: #059669;
+  --color-success-surface: #d1fae5;
+  --color-success-border: #34d399;
+
+  --color-danger: #dc2626;
+  --color-danger-surface: #fee2e2;
+  --color-danger-border: #f87171;
+
+  --color-info: #2563eb;
+  --color-info-surface: #dbeafe;
+  --color-info-border: #60a5fa;
+
+  /* ── Colour: personas ── */
+  --color-persona-ux: #7c3aed;
+  --color-persona-dx: #0891b2;
+  --color-persona-biz: #ca8a04;
+  --color-persona-chair: var(--color-accent);
+
+  /* ── Colour: backgrounds (light) ── */
+  --color-bg-canvas: #fafaf9;
+  --color-bg-surface: #ffffff;
+  --color-bg-raised: #ffffff;
+  --color-bg-sunken: #f5f5f4;
+  --color-bg-hover: #f5f5f4;
+  --color-bg-active: #e7e5e4;
+  --color-bg-selected: #fef3c7;
+
+  /* ── Colour: borders (light) ── */
+  --color-border-subtle: #f5f5f4;
+  --color-border-default: #e7e5e4;
+  --color-border-strong: #d6d3d1;
+
+  /* ── Colour: text (light) ── */
+  --color-text-primary: #1c1917;
+  --color-text-secondary: #57534e;
+  --color-text-tertiary: #a8a29e;
+  --color-text-inverse: #fafaf9;
+
+  /* ── Colour: focus ── */
+  --color-focus-ring: var(--color-accent);
+
+  /* ── Typography ── */
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --text-display-lg: 600 28px/36px var(--font-sans);
+  --text-display-md: 600 24px/32px var(--font-sans);
+  --text-display-sm: 600 20px/28px var(--font-sans);
+  --text-body-lg: 400 16px/26px var(--font-sans);
+  --text-body: 400 15px/24px var(--font-sans);
+  --text-label-strong: 600 14px/20px var(--font-sans);
+  --text-label: 500 14px/20px var(--font-sans);
+  --text-caption: 400 12px/16px var(--font-sans);
+  --text-code: 400 14px/22px var(--font-mono);
+  --text-code-block: 400 13px/22px var(--font-mono);
+  --text-code-sm: 400 12px/18px var(--font-mono);
+  --text-mono-label: 500 11px/16px var(--font-mono);
+  --text-overline: 600 11px/16px var(--font-sans);
+
+  /* ── Spacing (4px grid) ── */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ── Layout ── */
+  --layout-thread-max: 768px;
+  --layout-bubble-max: 620px;
+  --layout-rail-w: 300px;
+  --layout-gutter: 24px;
+  --layout-control-h-sm: 28px;
+  --layout-control-h: 36px;
+  --layout-control-h-lg: 44px;
+  --layout-icon: 16px;
+  --layout-icon-sm: 14px;
+  --layout-icon-lg: 20px;
+  --layout-focus-offset: 2px;
+
+  /* ── Radii ── */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-pill: 9999px;
+
+  /* ── Shadows ── */
+  --shadow-xs: 0 1px 2px rgba(28, 25, 23, 0.05);
+  --shadow-sm: 0 1px 3px rgba(28, 25, 23, 0.08), 0 1px 2px rgba(28, 25, 23, 0.04);
+  --shadow-md: 0 4px 6px rgba(28, 25, 23, 0.07), 0 2px 4px rgba(28, 25, 23, 0.04);
+  --shadow-lg: 0 10px 15px rgba(28, 25, 23, 0.08), 0 4px 6px rgba(28, 25, 23, 0.04);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-accent: #f59e0b;
+    --color-accent-hover: #d97706;
+    --color-accent-surface: #451a03;
+    --color-accent-border: #92400e;
+
+    --color-success: #34d399;
+    --color-success-surface: #064e3b;
+    --color-success-border: #059669;
+
+    --color-danger: #f87171;
+    --color-danger-surface: #450a0a;
+    --color-danger-border: #dc2626;
+
+    --color-info: #60a5fa;
+    --color-info-surface: #1e3a5f;
+    --color-info-border: #2563eb;
+
+    --color-bg-canvas: #1c1917;
+    --color-bg-surface: #292524;
+    --color-bg-raised: #44403c;
+    --color-bg-sunken: #1c1917;
+    --color-bg-hover: #44403c;
+    --color-bg-active: #57534e;
+    --color-bg-selected: #451a03;
+
+    --color-border-subtle: #292524;
+    --color-border-default: #44403c;
+    --color-border-strong: #57534e;
+
+    --color-text-primary: #fafaf9;
+    --color-text-secondary: #a8a29e;
+    --color-text-tertiary: #78716c;
+    --color-text-inverse: #1c1917;
+  }
+}

@@ -1,0 +1,27 @@
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: domain
+      POSTGRES_PASSWORD: domain
+      POSTGRES_DB: domain
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U domain -d domain"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build: .
+    ports:
+      - "8000:8080"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://domain:domain@db:5432/domain
+      APP_BASE_URL: http://localhost:8000
+    depends_on:
+      db:
+        condition: service_healthy

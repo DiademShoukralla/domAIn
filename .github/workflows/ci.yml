@@ -51,7 +51,20 @@ jobs:
         run: alembic upgrade head
 
       - name: Unit tests
-        run: pytest tests/unit -q
+        if: always()
+        run: pytest tests/unit --junitxml=unit-results.xml
 
-      - name: Integration smoke test
-        run: pytest tests/integration -q
+      - name: Integration tests
+        if: always()
+        run: pytest tests/integration --junitxml=integration-results.xml
+
+      - name: Build test summary
+        if: always() && github.event_name == 'pull_request'
+        run: python scripts/ci_test_summary.py unit-results.xml integration-results.xml > test-summary.md
+
+      - name: Post test summary comment
+        if: always() && github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: ci-test-summary
+          path: test-summary.md

@@ -11,6 +11,7 @@ from domain.ingestion.adapters.github import fetch_github_repo_documents
 from domain.ingestion.adapters.linear import fetch_linear_team_documents
 from domain.ingestion.chunking import chunk_text
 from domain.ingestion.embedder import embed_documents
+from domain.ingestion.errors import indexing_error_message
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +96,7 @@ async def index_knowledge_source(session: AsyncSession, source_id: UUID) -> None
         source = await session.get(KnowledgeSource, source_id)
         if source is not None:
             source.status = SourceStatus.ERROR
-            source.status_message = str(exc)
+            source.status_message = indexing_error_message(exc)
             await session.commit()
 
 

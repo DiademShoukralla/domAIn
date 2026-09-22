@@ -1,4 +1,3 @@
-from datetime import UTC, datetime
 from typing import Any, cast
 from uuid import UUID
 
@@ -56,9 +55,8 @@ async def upsert_linear_connection(
 ) -> Connection:
     access_token = token["access_token"]
     refresh_token = token.get("refresh_token")
+    # Linear tokens are long-lived; leave token_expires_at unset unless we can compute it.
     expires_at = None
-    if token.get("expires_in"):
-        expires_at = datetime.now(tz=UTC)  # Linear tokens are long-lived; refresh handled on demand
 
     result = await session.execute(
         select(Connection).where(Connection.user_id == user_id, Connection.provider == Provider.LINEAR)

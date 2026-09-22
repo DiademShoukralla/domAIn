@@ -1,0 +1,13 @@
+{
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "."
+  },
+  "terminals": [
+    {
+      "name": "API",
+      "command": "docker compose up --build"
+    }
+  ],
+  "install": "pip install -e '.[dev]'"
+}

@@ -1,0 +1,44 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
+
+      - name: Build and push image
+        env:
+          IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/domain:${{ github.sha }}
+        run: |
+          docker build -t "$IMAGE" .
+          docker push "$IMAGE"
+
+      - name: Deploy to Cloud Run
+        env:
+          IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/domain:${{ github.sha }}
+        run: |
+          gcloud run deploy domain-api \
+            --image "$IMAGE" \
+            --region "${{ secrets.GCP_REGION }}" \
+            --platform managed \
+            --allow-unauthenticated \
+            --set-secrets "DATABASE_URL=domain-database-url:latest,TOKEN_ENCRYPTION_KEY=domain-token-encryption-key:latest,BOOTSTRAP_API_KEY=domain-bootstrap-api-key:latest,GITHUB_CLIENT_ID=domain-github-client-id:latest,GITHUB_CLIENT_SECRET=domain-github-client-secret:latest,LINEAR_CLIENT_ID=domain-linear-client-id:latest,LINEAR_CLIENT_SECRET=domain-linear-client-secret:latest,VOYAGE_API_KEY=domain-voyage-api-key:latest" \
+            --set-env-vars "APP_BASE_URL=${{ secrets.APP_BASE_URL }},GITHUB_REDIRECT_URI=${{ secrets.GITHUB_REDIRECT_URI }},LINEAR_REDIRECT_URI=${{ secrets.LINEAR_REDIRECT_URI }}"

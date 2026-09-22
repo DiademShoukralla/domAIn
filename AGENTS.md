@@ -25,9 +25,17 @@ You are working on **domAIn**, a multi-agent decision council backed by a hybrid
 - **OAuth is hand-rolled via authlib**, not a third-party OAuth platform. See ADR 0002.
 - **Docs-as-code:** business docs live in `docs/business/`, ADRs in `docs/adr/`. Updates go through PR.
 
-## Project structure (expected)
+## Project structure
 
 ```
+src/domain/                     # FastAPI application package
+  api/routes/                   # REST endpoints (OAuth, sources, retrieval)
+  auth/                         # API key middleware
+  db/                           # SQLAlchemy models and session
+  ingestion/                    # Chunking, embedding, indexing pipeline
+  oauth/                        # GitHub and Linear OAuth (authlib)
+  retrieval/                    # RRF merge + coverage check
+  schemas/                      # Shared Pydantic models
 docs/
   adr/                          # Architecture Decision Records
   business/
@@ -36,4 +44,4 @@ docs/
 AGENTS.md                       # This file
 ```
 
-Application code will be added in subsequent passes. When it lands, follow the conventions established in the ADRs and design system above.
+Follow the conventions established in the ADRs and design system above.

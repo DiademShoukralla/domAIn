@@ -6,21 +6,30 @@ Source lifecycle indicator. Used in `SourceListItem` and anywhere a knowledge so
 
 | Value | Class | Semantic |
 |-------|-------|----------|
-| `pending` | `status--pending` | neutral |
+| `pending` | `status--pending` | info (same appearance as indexing) |
 | `indexing` | `status--indexing` | info |
 | `ready` | `status--ready` | success |
 | `error` | `status--error` | danger |
 
+`pending` and `indexing` share one appearance on purpose — same info blue, same pulsing dot. The word carries the difference. Indexing may render a progress bar; pending never does.
+
 ## Markup
 
 ```html
+<span class="status-chip status--pending">
+  <span class="status-chip__dot" aria-hidden="true"></span>
+  <span class="mono-label">pending</span>
+</span>
+
 <span class="status-chip status--indexing">
   <span class="status-chip__dot" aria-hidden="true"></span>
   <span class="mono-label">indexing</span>
+  <span class="status-chip__progress" aria-hidden="true"></span>
 </span>
 ```
 
 ## Do not
 
-- Add spinner icons that replace the status dot — the dot colour carries meaning.
+- Give `pending` a neutral grey appearance — it shares indexing's info blue and pulsing dot.
+- Render a progress bar on `pending`.
 - Use `accent` for any status.

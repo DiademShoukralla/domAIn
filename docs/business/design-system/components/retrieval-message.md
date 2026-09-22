@@ -9,7 +9,7 @@ Direct answer from the `simple_retrieval` path. No persona marks or verdict badg
   <div class="body">
     Permissions in domAIn v1 use nullable user_id and project_id columns on KnowledgeSource and APIKey, with a shared can_access() function. There is no Permissions table.
   </div>
-  <!-- CitationBlock(s) here -->
+  <!-- CodeCitation here -->
 </article>
 ```
 

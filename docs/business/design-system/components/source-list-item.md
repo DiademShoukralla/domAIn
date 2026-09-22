@@ -6,12 +6,12 @@ One row in the knowledge-source rail. Shows source name, external reference, and
 
 Exactly four status values. Do not invent additional states.
 
-| Value | Display | Semantic class |
-|-------|---------|----------------|
-| `pending` | Pending | `status--pending` |
-| `indexing` | Indexing | `status--indexing` |
-| `ready` | Ready | `status--ready` |
-| `error` | Error | `status--error` |
+| Value | Display | Semantic class | Notes |
+|-------|---------|----------------|-------|
+| `pending` | Pending | `status--pending` | Same info blue + pulsing dot as indexing; no progress bar |
+| `indexing` | Indexing | `status--indexing` | Info blue + pulsing dot + progress bar |
+| `ready` | Ready | `status--ready` | |
+| `error` | Error | `status--error` | |
 
 Pass the raw status string from the API. CSS handles uppercase display.
 
@@ -43,3 +43,4 @@ When status is `error`, show `status_message` from the API below the meta line i
 
 - Add a fifth status (e.g. "syncing", "paused", "stale").
 - Use `accent` colour for any status chip.
+- Show a progress bar when status is `pending`.

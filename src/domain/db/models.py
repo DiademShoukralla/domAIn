@@ -33,7 +33,10 @@ class Connection(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
-    provider: Mapped[Provider] = mapped_column(Enum(Provider, name="provider"), nullable=False)
+    provider: Mapped[Provider] = mapped_column(
+        Enum(Provider, name="provider", values_callable=lambda enum_cls: [e.value for e in enum_cls]),
+        nullable=False,
+    )
     access_token: Mapped[str] = mapped_column(Text, nullable=False)
     refresh_token: Mapped[str | None] = mapped_column(Text, nullable=True)
     token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
@@ -57,14 +60,23 @@ class KnowledgeSource(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True, index=True)
     project_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True, index=True)
-    source_type: Mapped[SourceType] = mapped_column(Enum(SourceType, name="source_type"), nullable=False)
+    source_type: Mapped[SourceType] = mapped_column(
+        Enum(SourceType, name="source_type", values_callable=lambda enum_cls: [e.value for e in enum_cls]),
+        nullable=False,
+    )
     external_ref: Mapped[str] = mapped_column(String(512), nullable=False)
     connection_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("connections.id", ondelete="CASCADE"), nullable=False
     )
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     status: Mapped[SourceStatus] = mapped_column(
-        Enum(SourceStatus, name="source_status"), nullable=False, default=SourceStatus.PENDING
+        Enum(
+            SourceStatus,
+            name="source_status",
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+        ),
+        nullable=False,
+        default=SourceStatus.PENDING,
     )
     status_message: Mapped[str | None] = mapped_column(Text, nullable=True)
     last_indexed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

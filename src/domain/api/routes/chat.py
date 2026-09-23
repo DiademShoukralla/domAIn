@@ -11,7 +11,7 @@ from domain.auth.middleware import get_actor
 from domain.chat.service import get_session_messages, process_message
 from domain.council.status import STATUS_QUEUE_SENTINEL, StatusQueue
 from domain.db.session import async_session_factory, get_db
-from domain.schemas.chat import ChatHistoryResponse, ChatMessageIn, ChatResponse, ChatStatusUpdate
+from domain.schemas.chat import ChatHistoryResponse, ChatMessageIn, ChatResponse
 from domain.schemas.common import ActorContext
 
 logger = logging.getLogger(__name__)

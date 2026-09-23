@@ -37,10 +37,13 @@ OAuth connect:
 
 ```bash
 pip install -e ".[dev]"
+pre-commit install
 docker compose up -d db
 alembic upgrade head
 uvicorn domain.main:app --reload --app-dir src
 ```
+
+`pre-commit install` is a required one-time setup step. It installs a git hook that runs ruff (lint + format) and mypy on each commit, blocking commits that introduce lint or type errors.
 
 Run tests:
 

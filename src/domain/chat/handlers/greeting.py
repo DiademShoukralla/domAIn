@@ -10,7 +10,9 @@ async def handle_greeting(session_id: UUID, message: str) -> ChatResponse:
     elif "thank" in normalized:
         content = "You're welcome. I'm here whenever you need an answer or a council review."
     else:
-        content = "Hi there. I can answer knowledge questions or route strategic reviews to the council."
+        content = (
+            "Hi there. I can answer knowledge questions or route strategic reviews to the council."
+        )
 
     return ChatResponse(
         session_id=session_id,

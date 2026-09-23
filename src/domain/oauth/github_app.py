@@ -110,7 +110,9 @@ async def upsert_github_connection(
     external_account_id, external_account_name = _account_fields(installation)
 
     result = await session.execute(
-        select(Connection).where(Connection.user_id == user_id, Connection.provider == Provider.GITHUB)
+        select(Connection).where(
+            Connection.user_id == user_id, Connection.provider == Provider.GITHUB
+        )
     )
     connection = result.scalar_one_or_none()
     if connection is None:

@@ -25,7 +25,9 @@ TEXT_EXTENSIONS = {
 }
 
 
-async def fetch_github_repo_documents(installation_id: str, repo_full_name: str) -> list[FetchedDocument]:
+async def fetch_github_repo_documents(
+    installation_id: str, repo_full_name: str
+) -> list[FetchedDocument]:
     access_token = await get_installation_access_token(installation_id)
     headers = {
         "Authorization": f"Bearer {access_token}",

@@ -1,9 +1,8 @@
+import asyncio
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest
-
-import asyncio
 
 from domain.chat.router import route_message
 from domain.schemas.chat import ChatIntent, ResponseKind
@@ -15,7 +14,9 @@ async def test_route_greeting_does_not_call_retrieval() -> None:
     actor = ActorContext(user_id=uuid4())
     session_id = uuid4()
 
-    with patch("domain.chat.router.handle_simple_retrieval", new_callable=AsyncMock) as retrieval_mock:
+    with patch(
+        "domain.chat.router.handle_simple_retrieval", new_callable=AsyncMock
+    ) as retrieval_mock:
         response = await route_message(
             session_id=session_id,
             message="Hello!",

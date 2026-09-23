@@ -62,7 +62,9 @@ async def upsert_linear_connection(
     expires_at = None
 
     result = await session.execute(
-        select(Connection).where(Connection.user_id == user_id, Connection.provider == Provider.LINEAR)
+        select(Connection).where(
+            Connection.user_id == user_id, Connection.provider == Provider.LINEAR
+        )
     )
     connection = result.scalar_one_or_none()
     display_name = user_info.get("name") or user_info.get("email") or "linear-user"
@@ -79,7 +81,9 @@ async def upsert_linear_connection(
         session.add(connection)
     else:
         connection.access_token = encrypt_token(access_token)
-        connection.refresh_token = encrypt_token(refresh_token) if refresh_token else connection.refresh_token
+        connection.refresh_token = (
+            encrypt_token(refresh_token) if refresh_token else connection.refresh_token
+        )
         connection.token_expires_at = expires_at
         connection.external_account_id = user_info["id"]
         connection.external_account_name = display_name

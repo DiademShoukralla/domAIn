@@ -19,6 +19,12 @@ def get_retrieval_answer_model() -> BaseChatModel:
 
 
 @lru_cache
+def get_persona_model() -> BaseChatModel:
+    settings = get_settings()
+    return init_chat_model(settings.persona_model, temperature=0.2)
+
+
+@lru_cache
 def get_council_chair_model() -> BaseChatModel:
     settings = get_settings()
     return init_chat_model(settings.council_chair_model, temperature=0.2)

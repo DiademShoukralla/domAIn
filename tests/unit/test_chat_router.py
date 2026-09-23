@@ -28,20 +28,25 @@ async def test_route_greeting_does_not_call_retrieval() -> None:
 
 
 @pytest.mark.asyncio
-async def test_route_strategic_session_hands_off_to_council() -> None:
+async def test_route_strategic_session_runs_council() -> None:
     actor = ActorContext(user_id=uuid4())
     session_id = uuid4()
 
-    response = await route_message(
-        session_id=session_id,
-        message="Review this proposal",
-        actor=actor,
-        db=AsyncMock(),
-        intent=ChatIntent.STRATEGIC_SESSION,
-    )
+    with patch("domain.chat.router.run_council", new_callable=AsyncMock) as council_mock:
+        council_mock.return_value.response_kind = ResponseKind.COUNCIL_RESULT
+        council_mock.return_value.classified_intent = ChatIntent.STRATEGIC_SESSION
 
+        response = await route_message(
+            session_id=session_id,
+            message="Review this proposal",
+            actor=actor,
+            db=AsyncMock(),
+            intent=ChatIntent.STRATEGIC_SESSION,
+        )
+
+    council_mock.assert_awaited_once()
     assert response.classified_intent == ChatIntent.STRATEGIC_SESSION
-    assert response.response_kind == ResponseKind.COUNCIL_PENDING_HANDOFF
+    assert response.response_kind == ResponseKind.COUNCIL_RESULT
 
 
 @pytest.mark.asyncio

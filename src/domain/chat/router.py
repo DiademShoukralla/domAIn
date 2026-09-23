@@ -28,7 +28,7 @@ async def route_message(
     if resolved_intent == ChatIntent.SIMPLE_RETRIEVAL:
         return await handle_simple_retrieval(session_id, message, actor, db)
     if resolved_intent == ChatIntent.STRATEGIC_SESSION:
-        return await run_council(session_id, message)
+        return await run_council(session_id, message, actor, db)
     if resolved_intent == ChatIntent.LINEAR_READ:
         return await handle_linear_read(session_id, message)
     if resolved_intent == ChatIntent.LINEAR_WRITE:

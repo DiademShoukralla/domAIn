@@ -1,19 +1,19 @@
 import operator
-from typing import Annotated, TypedDict
+from typing import Annotated, Any, TypedDict
 
 from langgraph.graph import END, START, StateGraph
+from langgraph.graph.state import CompiledStateGraph
 from langgraph.types import Send
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.council.chair import synthesize_decision
 from domain.council.personas import PERSONA_IDS, run_persona
+from domain.db.session import async_session_factory
 from domain.schemas.common import ActorContext, CouncilDecision, PersonaOpinion, ReviewRequest
 
 
 class CouncilState(TypedDict):
     request: ReviewRequest
     actor: ActorContext
-    db: AsyncSession
     persona_opinions: Annotated[list[PersonaOpinion], operator.add]
     decision: CouncilDecision | None
 
@@ -21,7 +21,6 @@ class CouncilState(TypedDict):
 class PersonaWorkerState(TypedDict):
     request: ReviewRequest
     actor: ActorContext
-    db: AsyncSession
     persona: str
 
 
@@ -32,7 +31,6 @@ def dispatch_personas(state: CouncilState) -> list[Send]:
             {
                 "request": state["request"],
                 "actor": state["actor"],
-                "db": state["db"],
                 "persona": persona,
             },
         )
@@ -41,12 +39,13 @@ def dispatch_personas(state: CouncilState) -> list[Send]:
 
 
 async def persona_node(state: PersonaWorkerState) -> dict[str, list[PersonaOpinion]]:
-    opinion = await run_persona(
-        persona=state["persona"],
-        request=state["request"],
-        actor=state["actor"],
-        db=state["db"],
-    )
+    async with async_session_factory() as db:
+        opinion = await run_persona(
+            persona=state["persona"],
+            request=state["request"],
+            actor=state["actor"],
+            db=db,
+        )
     return {"persona_opinions": [opinion]}
 
 
@@ -55,7 +54,7 @@ async def chair_node(state: CouncilState) -> dict[str, CouncilDecision]:
     return {"decision": decision}
 
 
-def build_council_graph():
+def build_council_graph() -> CompiledStateGraph[CouncilState, Any, CouncilState, CouncilState]:
     graph = StateGraph(CouncilState)
     graph.add_node("persona", persona_node)
     graph.add_node("chair", chair_node)
@@ -65,4 +64,6 @@ def build_council_graph():
     return graph.compile()
 
 
-council_graph = build_council_graph()
+council_graph: CompiledStateGraph[CouncilState, Any, CouncilState, CouncilState] = (
+    build_council_graph()
+)

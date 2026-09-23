@@ -3,8 +3,9 @@ import json
 import logging
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect, status
+from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from domain.auth.api_key import validate_api_key
 from domain.auth.middleware import get_actor
@@ -28,6 +29,15 @@ async def _resolve_actor_from_api_key(api_key: str) -> ActorContext | None:
     return ActorContext(user_id=user_id, project_id=project_id)
 
 
+async def _cleanup_pipeline_task(task: asyncio.Task[ChatResponse] | None) -> None:
+    if task is not None and not task.done():
+        task.cancel()
+        try:
+            await task
+        except asyncio.CancelledError:
+            pass
+
+
 @router.websocket("/ws")
 async def chat_websocket(
     websocket: WebSocket,
@@ -43,6 +53,7 @@ async def chat_websocket(
         return
 
     await websocket.accept()
+    active_pipeline_task: asyncio.Task[ChatResponse] | None = None
     try:
         while True:
             raw = await websocket.receive_text()
@@ -52,26 +63,39 @@ async def chat_websocket(
 
             async def run_message_pipeline() -> ChatResponse:
                 async with async_session_factory() as session:
-                    return await process_message(
-                        db=session,
-                        session_id=message.session_id,
-                        content=message.content,
-                        actor=actor,
-                        status_queue=status_queue,
-                    )
+                    try:
+                        return await process_message(
+                            db=session,
+                            session_id=message.session_id,
+                            content=message.content,
+                            actor=actor,
+                            status_queue=status_queue,
+                        )
+                    except asyncio.CancelledError:
+                        await session.invalidate()
+                        raise
 
-            pipeline_task = asyncio.create_task(run_message_pipeline())
-            while True:
-                update = await status_queue.get()
-                if update is STATUS_QUEUE_SENTINEL:
-                    break
-                await websocket.send_text(update.model_dump_json())
+            try:
+                active_pipeline_task = asyncio.create_task(run_message_pipeline())
+                while True:
+                    update = await status_queue.get()
+                    if update is STATUS_QUEUE_SENTINEL:
+                        break
+                    await websocket.send_text(update.model_dump_json())
 
-            response = await pipeline_task
-            await websocket.send_text(response.model_dump_json())
+                response = await active_pipeline_task
+                await websocket.send_text(response.model_dump_json())
+            finally:
+                await _cleanup_pipeline_task(active_pipeline_task)
+                active_pipeline_task = None
+    except asyncio.CancelledError:
+        await _cleanup_pipeline_task(active_pipeline_task)
+        raise
     except WebSocketDisconnect:
+        await _cleanup_pipeline_task(active_pipeline_task)
         return
     except Exception:
+        await _cleanup_pipeline_task(active_pipeline_task)
         logger.exception("WebSocket chat handler failed")
         await websocket.close(code=status.WS_1011_INTERNAL_ERROR, reason="Internal error")
 

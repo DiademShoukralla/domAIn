@@ -150,6 +150,9 @@ class WriteBackProposal(Base):
         index=True,
     )
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
+    project_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True, index=True
+    )
     plan: Mapped[dict[str, object]] = mapped_column(JSONB, nullable=False)
     feedback_history: Mapped[list[dict[str, object]]] = mapped_column(
         JSONB, nullable=False, default=list

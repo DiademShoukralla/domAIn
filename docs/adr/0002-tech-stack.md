@@ -192,9 +192,48 @@ A bootstrap API key is inserted on application startup from `BOOTSTRAP_API_KEY` 
 
 **Rationale:** Reusing `validate_api_key()` keeps one identity model across HTTP and WebSocket. Manual WS validation is required because middleware cannot protect the upgrade handshake.
 
+## GitHub App replacing GitHub OAuth App
+
+Date: 2026-09-23
+
+GitHub provider authentication moves from a **classic OAuth App** (client ID/secret, user-authorized scopes, long-lived encrypted token on `Connection`) to a **GitHub App** installed on the domAIn account.
+
+### Configured app shape
+
+| Setting | Value |
+|---------|-------|
+| Webhook | **Off** — no webhook URL or secret |
+| Permissions | Repository only: Contents read/write, Pull requests read/write, Metadata read-only (automatic) |
+| Install scope | Single-account (this account only) |
+| User authorization callback | **Unused** — the "Identifying and authorizing users" callback URL is not part of this flow |
+| Post-install redirect | Setup URL: `https://domain.didi.build/oauth/github/callback` (`installation_id`, `setup_action` query params — no OAuth `code`) |
+
+### Authentication mechanics
+
+- **App auth:** `GITHUB_APP_ID` + `GITHUB_APP_PRIVATE_KEY_BASE64` (PEM, base64-encoded). No client secret.
+- **JWT:** RS256 app JWT (~10 minute lifetime) minted per request batch.
+- **Installation token:** `POST /app/installations/{installation_id}/access_tokens`, cached in memory until expiry.
+- **Account metadata:** `GET /app/installations/{installation_id}` with app JWT (not installation token) populates `external_account_id` / `external_account_name`.
+- **Install URL:** `GET /oauth/github/authorize` redirects to `https://github.com/apps/<GITHUB_APP_SLUG>/installations/new?state=…` (slug from app settings, not assumed from display name).
+
+### Rationale
+
+- Installation-scoped access matches actual need (specific repos) without user-wide `repo` scope.
+- Short-lived installation tokens; no long-lived GitHub token encrypted at rest on `Connection`.
+- Repository permissions align with indexing (Contents) and write-back (Pull requests).
+
+### Tradeoff
+
+The App **private key** is a higher blast-radius secret than a classic OAuth client secret was — compromise grants App-level access until the key is rotated. Mitigation: key stored only in server env, never logged, masked in `generate-env.sh`.
+
+### Linear unchanged
+
+Linear has no App-equivalent; it remains on **classic OAuth** via authlib (`LINEAR_CLIENT_ID` / `LINEAR_CLIENT_SECRET`, encrypted access token on `Connection`).
+
 ## Changelog
 
 | Date | Change |
 |------|--------|
 | 2026-09-22 | Initial decisions: FastAPI, pgvector, Voyage, LangChain, RRF, simple chunking, hand-rolled OAuth, write-back via GitHub PR + Linear, testing strategy, CI/CD. |
 | 2026-09-23 | Authentication model: API-key HTTP auth (`AuthMiddleware`, `validate_api_key`, `ActorContext`) and WebSocket manual validation exception. |
+| 2026-09-23 | GitHub App replaces GitHub OAuth App; Linear stays on classic OAuth. |

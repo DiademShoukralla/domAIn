@@ -25,6 +25,7 @@ dependencies = [
     "langchain>=0.3.0",
     "langchain-anthropic>=0.3.0",
     "langchain-core>=0.3.0",
+    "PyJWT>=2.8.0",
 ]
 
 [project.optional-dependencies]
@@ -59,7 +60,7 @@ packages = ["domain"]
 mypy_path = "src"
 
 [[tool.mypy.overrides]]
-module = ["authlib.*", "voyageai", "voyageai.*", "langchain.*", "langchain_anthropic.*"]
+module = ["authlib.*", "voyageai", "voyageai.*", "langchain.*", "langchain_anthropic.*", "jwt"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

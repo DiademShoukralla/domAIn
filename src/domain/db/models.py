@@ -37,9 +37,10 @@ class Connection(Base):
         Enum(Provider, name="provider", values_callable=lambda enum_cls: [e.value for e in enum_cls]),
         nullable=False,
     )
-    access_token: Mapped[str] = mapped_column(Text, nullable=False)
+    access_token: Mapped[str | None] = mapped_column(Text, nullable=True)
     refresh_token: Mapped[str | None] = mapped_column(Text, nullable=True)
     token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    installation_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     external_account_id: Mapped[str] = mapped_column(String(255), nullable=False)
     external_account_name: Mapped[str] = mapped_column(String(255), nullable=False)
     created_at: Mapped[datetime] = mapped_column(

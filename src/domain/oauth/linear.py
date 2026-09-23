@@ -87,4 +87,6 @@ async def upsert_linear_connection(
 
 
 async def get_linear_access_token(session: AsyncSession, connection: Connection) -> str:
+    if not connection.access_token:
+        raise RuntimeError("Linear connection is missing access_token")
     return decrypt_token(connection.access_token)

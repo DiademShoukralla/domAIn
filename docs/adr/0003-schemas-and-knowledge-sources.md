@@ -156,6 +156,29 @@ pending → indexing → ready
 
 Re-indexing transitions `ready → indexing → ready` (or `error`).
 
+## Connection schema: GitHub App installation (2026-09-23)
+
+GitHub `Connection` rows no longer store OAuth tokens. Linear connections are unchanged.
+
+### `Connection` field changes
+
+| Field | GitHub | Linear |
+|-------|--------|--------|
+| `access_token` | `null` | encrypted OAuth access token (required) |
+| `refresh_token` | `null` | encrypted refresh token (optional) |
+| `token_expires_at` | `null` | optional |
+| `installation_id` | GitHub App installation ID (required) | `null` |
+
+Token columns are **nullable** at the database level so GitHub rows can omit them while Linear rows continue to populate them.
+
+### Account identity for GitHub
+
+`external_account_id` and `external_account_name` are populated from **`GET /app/installations/{installation_id}`** metadata (`account.id`, `account.login`) after the Setup URL callback — not from `GET /user` with a user OAuth token.
+
+### Install flow
+
+`GET /oauth/github/callback` receives `installation_id` and `setup_action` (no OAuth `code`). The handler fetches installation metadata, upserts `Connection` with `installation_id` set and token fields null. GitHub API calls (indexing, write-back) mint a fresh installation access token on demand.
+
 ## Consequences
 
 - Shared Pydantic models enforce contract consistency from API through to LangGraph state.

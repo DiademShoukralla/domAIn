@@ -69,7 +69,7 @@ mask_value() {
 is_secret_var() {
   local name="$1"
   case "$name" in
-    *_KEY | *_SECRET | *PASSWORD* | TOKEN_ENCRYPTION_KEY | BOOTSTRAP_API_KEY)
+    *_KEY | *_SECRET | *PASSWORD* | *_PRIVATE_KEY* | TOKEN_ENCRYPTION_KEY | BOOTSTRAP_API_KEY | GITHUB_APP_PRIVATE_KEY_BASE64)
       return 0
       ;;
     *)

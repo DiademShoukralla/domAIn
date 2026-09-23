@@ -20,7 +20,7 @@ async def test_chat_history_persists_messages(db_session) -> None:
     settings = get_settings()
 
     with (
-        patch("domain.chat.router.classify_intent", new_callable=AsyncMock) as classify_mock,
+        patch("domain.chat.service.classify_intent", new_callable=AsyncMock) as classify_mock,
         patch("domain.chat.handlers.retrieval.retrieve", new_callable=AsyncMock) as retrieve_mock,
         patch(
             "domain.chat.handlers.retrieval.get_retrieval_answer_model",

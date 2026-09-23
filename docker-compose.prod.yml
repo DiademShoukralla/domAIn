@@ -1,0 +1,59 @@
+services:
+  domain-db:
+    image: pgvector/pgvector:pg16
+    container_name: domain-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: domain
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: domain
+    volumes:
+      - domain-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U domain -d domain"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  domain-api:
+    image: ghcr.io/${GHCR_OWNER}/domain:${IMAGE_TAG}
+    container_name: domain-api
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    environment:
+      DATABASE_URL: postgresql+asyncpg://domain:${POSTGRES_PASSWORD}@domain-db:5432/domain
+      PORT: "8080"
+    depends_on:
+      domain-db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'python -c "import urllib.request; urllib.request.urlopen(''http://localhost:8080/health'')"',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 15s
+    networks:
+      - default
+      - public-ingress
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  public-ingress:
+    external: true
+
+volumes:
+  domain-db-data:

@@ -13,7 +13,7 @@ This pass delivers the deployable knowledge layer backend:
 - Ingestion pipeline (chunk → Voyage `voyage-context-4` embed → pgvector + Postgres FTS)
 - Shared hybrid retrieval (`vector + keyword → RRF → coverage check`)
 - Permissions via `can_access()`
-- Docker + Cloud Run deployment with GitHub Actions CI/CD
+- Docker deployment to shared droplet (GHCR + compose) with GitHub Actions CI/CD
 
 ## Quick start
 

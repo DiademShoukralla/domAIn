@@ -31,6 +31,7 @@ jobs:
       TOKEN_ENCRYPTION_KEY: J1DKacOrXJ8dI6ByJL5wpw73UYWIjwpaQX6BFzxuBIw=
       BOOTSTRAP_API_KEY: test-api-key
       VOYAGE_API_KEY: test-voyage-key
+      ANTHROPIC_API_KEY: test-anthropic-key
 
     steps:
       - uses: actions/checkout@v4

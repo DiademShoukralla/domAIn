@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.chat.classifier import classify_intent
 from domain.chat.router import route_message
+from domain.council.status import STATUS_QUEUE_SENTINEL, StatusQueue
 from domain.db.models import ChatMessage
 from domain.schemas.chat import (
     ChatIntent,
@@ -67,6 +68,8 @@ async def process_message(
     content: str,
     actor: ActorContext,
     intent: ChatIntent | None = None,
+    *,
+    status_queue: StatusQueue | None = None,
 ) -> ChatResponse:
     resolved_intent = intent or await classify_intent(content)
 
@@ -79,7 +82,19 @@ async def process_message(
         classified_intent=resolved_intent,
     )
 
-    response = await route_message(session_id, content, actor, db, intent=resolved_intent)
+    try:
+        response = await route_message(
+            session_id,
+            content,
+            actor,
+            db,
+            intent=resolved_intent,
+            status_queue=status_queue,
+        )
+    finally:
+        if status_queue is not None:
+            await status_queue.put(STATUS_QUEUE_SENTINEL)
+
     await _persist_message(
         db,
         session_id=session_id,

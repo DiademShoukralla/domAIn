@@ -52,6 +52,9 @@ async def test_council_graph_invokes_all_three_personas() -> None:
         request: ReviewRequest,
         actor: ActorContext,
         db: object,
+        *,
+        session_id: object,
+        status_queue: object = None,
     ) -> PersonaOpinion:
         invoked_personas.append(persona)
         return _make_opinion(persona)
@@ -70,6 +73,7 @@ async def test_council_graph_invokes_all_three_personas() -> None:
             {
                 "request": request,
                 "actor": actor,
+                "session_id": uuid4(),
                 "persona_opinions": [],
                 "decision": None,
             }

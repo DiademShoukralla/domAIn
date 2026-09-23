@@ -10,6 +10,7 @@ from domain.chat.handlers import (
     handle_simple_retrieval,
 )
 from domain.council import run_council
+from domain.council.status import StatusQueue, emit_supervisor_status
 from domain.schemas.chat import ChatIntent, ChatResponse
 from domain.schemas.common import ActorContext
 
@@ -20,6 +21,8 @@ async def route_message(
     actor: ActorContext,
     db: AsyncSession,
     intent: ChatIntent | None = None,
+    *,
+    status_queue: StatusQueue | None = None,
 ) -> ChatResponse:
     resolved_intent = intent or await classify_intent(message)
 
@@ -28,7 +31,14 @@ async def route_message(
     if resolved_intent == ChatIntent.SIMPLE_RETRIEVAL:
         return await handle_simple_retrieval(session_id, message, actor, db)
     if resolved_intent == ChatIntent.STRATEGIC_SESSION:
-        return await run_council(session_id, message, actor, db)
+        await emit_supervisor_status(status_queue, session_id, "alerting_council")
+        return await run_council(
+            session_id,
+            message,
+            actor,
+            db,
+            status_queue=status_queue,
+        )
     if resolved_intent == ChatIntent.LINEAR_READ:
         return await handle_linear_read(session_id, message)
     if resolved_intent == ChatIntent.LINEAR_WRITE:

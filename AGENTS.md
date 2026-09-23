@@ -14,6 +14,7 @@ You are working on **domAIn**, a multi-agent decision council backed by a hybrid
 
 ## Rules
 
+- **Before starting any task, you must confirm the working branch is fresh.** Run `git fetch origin` and verify the branch was created from the current tip of `origin/main` (e.g. compare `git log origin/main -1` against the branch's fork point) — not a branch or local checkout that predates recent merges.
 - **Do not contradict ADRs.** If your task requires a decision that conflicts with an ADR, propose an ADR amendment (append to the relevant living document or create a new ADR) and get it reviewed before implementing.
 - **`user_id` comes from auth context, never the request body.** See ADR 0003.
 - **All access checks go through `can_access()`.** See ADR 0004.

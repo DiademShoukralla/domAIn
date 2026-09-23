@@ -5,7 +5,6 @@ import pytest
 from sqlalchemy import func, select
 
 from domain.config import get_settings
-from domain.crypto import encrypt_token
 from domain.db.models import Chunk, Connection, KnowledgeSource, Provider, SourceStatus, SourceType
 from domain.ingestion.adapters.types import FetchedDocument
 from domain.ingestion.errors import GENERIC_INDEXING_FAILURE_MESSAGE, RECONNECT_WORKSPACE_MESSAGE
@@ -25,9 +24,10 @@ async def github_connection(db_session) -> Connection:
     connection = Connection(
         user_id=USER_ID,
         provider=Provider.GITHUB,
-        access_token=encrypt_token("github-test-token"),
+        access_token=None,
         refresh_token=None,
         token_expires_at=None,
+        installation_id="12345",
         external_account_id="12345",
         external_account_name="test-user",
     )

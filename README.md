@@ -8,7 +8,7 @@ The knowledge layer stores the codebase, business documentation, and Architectur
 
 This pass delivers the deployable knowledge layer backend:
 
-- FastAPI service with GitHub and Linear OAuth (`authlib`)
+- FastAPI service with GitHub App installation auth and Linear OAuth (`authlib`)
 - `Connection` and `KnowledgeSource` entities with CRUD
 - Ingestion pipeline (chunk → Voyage `voyage-context-4` embed → pgvector + Postgres FTS)
 - Shared hybrid retrieval (`vector + keyword → RRF → coverage check`)

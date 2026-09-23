@@ -18,10 +18,9 @@ class Settings(BaseSettings):
 
     bootstrap_api_key: str = "dev-api-key-change-me"
 
-    github_client_id: str = ""
-    github_client_secret: str = ""
-    github_redirect_uri: str = "http://localhost:8000/oauth/github/callback"
-    github_scopes: str = "repo read:user"
+    github_app_id: str = ""
+    github_app_slug: str = ""
+    github_app_private_key_base64: str = ""
 
     linear_client_id: str = ""
     linear_client_secret: str = ""

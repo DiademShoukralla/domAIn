@@ -5,10 +5,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from domain.auth.middleware import get_actor
 from domain.config import get_settings
 from domain.db.session import get_db
-from domain.oauth.github import (
-    github_authorize_url,
-    github_exchange_code,
-    github_fetch_user,
+from domain.oauth.github_app import (
+    fetch_installation,
+    github_install_url,
     upsert_github_connection,
 )
 from domain.oauth.linear import (
@@ -26,16 +25,17 @@ router = APIRouter(prefix="/oauth", tags=["oauth"])
 @router.get("/github/authorize")
 async def github_authorize(actor: ActorContext = Depends(get_actor)) -> RedirectResponse:
     settings = get_settings()
-    if not settings.github_client_id:
-        raise HTTPException(status_code=503, detail="GitHub OAuth is not configured")
+    if not settings.github_app_id or not settings.github_app_private_key_base64:
+        raise HTTPException(status_code=503, detail="GitHub App is not configured")
     state = create_oauth_state(actor.user_id)
-    return RedirectResponse(github_authorize_url(state))
+    return RedirectResponse(github_install_url(state))
 
 
 @router.get("/github/callback")
 async def github_callback(
-    code: str = Query(...),
+    installation_id: str = Query(...),
     state: str = Query(...),
+    _setup_action: str | None = Query(default=None, alias="setup_action"),
     db: AsyncSession = Depends(get_db),
 ) -> RedirectResponse:
     try:
@@ -43,9 +43,8 @@ async def github_callback(
     except OAuthStateError:
         raise HTTPException(status_code=400, detail="Invalid or expired OAuth state") from None
 
-    token = await github_exchange_code(code, state=state)
-    user_info = await github_fetch_user(token["access_token"])
-    await upsert_github_connection(db, user_id, token, user_info)
+    installation = await fetch_installation(installation_id)
+    await upsert_github_connection(db, user_id, installation_id, installation)
     return RedirectResponse(url=f"{get_settings().app_base_url}/connections?provider=github&status=connected")
 
 

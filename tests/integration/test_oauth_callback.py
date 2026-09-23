@@ -10,7 +10,7 @@ async def test_github_callback_rejects_forged_state() -> None:
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get(
             "/oauth/github/callback",
-            params={"code": "fake-code", "state": "forged-state-token"},
+            params={"installation_id": "12345", "state": "forged-state-token"},
         )
     assert response.status_code == 400
     assert response.json()["detail"] == "Invalid or expired OAuth state"

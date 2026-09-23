@@ -33,10 +33,14 @@ async def index_knowledge_source(session: AsyncSession, source_id: UUID) -> None
     await session.commit()
 
     try:
-        access_token = decrypt_token(connection.access_token)
         if source.source_type == SourceType.GITHUB_REPO:
-            documents = await fetch_github_repo_documents(access_token, source.external_ref)
+            if not connection.installation_id:
+                raise ValueError("GitHub connection is missing installation_id")
+            documents = await fetch_github_repo_documents(connection.installation_id, source.external_ref)
         elif source.source_type == SourceType.LINEAR:
+            if not connection.access_token:
+                raise ValueError("Linear connection is missing access_token")
+            access_token = decrypt_token(connection.access_token)
             documents = await fetch_linear_team_documents(access_token, source.external_ref)
         else:
             raise ValueError(f"Unsupported source type: {source.source_type}")

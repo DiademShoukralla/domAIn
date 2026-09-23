@@ -1,6 +1,7 @@
 import httpx
 
 from domain.ingestion.adapters.types import FetchedDocument
+from domain.oauth.github_app import get_installation_access_token
 
 TEXT_EXTENSIONS = {
     ".md",
@@ -24,7 +25,8 @@ TEXT_EXTENSIONS = {
 }
 
 
-async def fetch_github_repo_documents(access_token: str, repo_full_name: str) -> list[FetchedDocument]:
+async def fetch_github_repo_documents(installation_id: str, repo_full_name: str) -> list[FetchedDocument]:
+    access_token = await get_installation_access_token(installation_id)
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Accept": "application/vnd.github+json",

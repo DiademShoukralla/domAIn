@@ -25,7 +25,11 @@ router = APIRouter(prefix="/oauth", tags=["oauth"])
 @router.get("/github/authorize")
 async def github_authorize(actor: ActorContext = Depends(get_actor)) -> RedirectResponse:
     settings = get_settings()
-    if not settings.github_app_id or not settings.github_app_private_key_base64:
+    if (
+        not settings.github_app_id
+        or not settings.github_app_slug
+        or not settings.github_app_private_key_base64
+    ):
         raise HTTPException(status_code=503, detail="GitHub App is not configured")
     state = create_oauth_state(actor.user_id)
     return RedirectResponse(github_install_url(state))

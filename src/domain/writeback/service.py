@@ -36,6 +36,7 @@ def _to_proposal_out(proposal: WriteBackProposal) -> WriteBackProposalOut:
         id=proposal.id,
         chat_message_id=proposal.chat_message_id,
         user_id=proposal.user_id,
+        project_id=proposal.project_id,
         plan=WriteBackPlan.model_validate(proposal.plan),
         feedback_history=feedback_history,
         status=WriteBackProposalStatus(proposal.status),
@@ -78,6 +79,7 @@ async def create_write_back_proposal(
     proposal = WriteBackProposal(
         chat_message_id=message_id,
         user_id=actor.user_id,
+        project_id=message.project_id,
         plan=plan.model_dump(mode="json"),
         feedback_history=[],
         status=WriteBackProposalStatus.PROPOSED.value,
@@ -95,7 +97,9 @@ async def refine_write_back_proposal(
     actor: ActorContext,
 ) -> WriteBackProposalOut:
     proposal = await db.get(WriteBackProposal, proposal_id)
-    if proposal is None or not can_access(actor.user_id, actor.project_id, proposal.user_id, None):
+    if proposal is None or not can_access(
+        actor.user_id, actor.project_id, proposal.user_id, proposal.project_id
+    ):
         raise HTTPException(status_code=404, detail="Write-back proposal not found")
     if proposal.status != WriteBackProposalStatus.PROPOSED.value:
         raise HTTPException(status_code=400, detail="Proposal is not open for refinement")

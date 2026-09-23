@@ -33,6 +33,7 @@ class WriteBackProposalOut(BaseModel):
     id: UUID
     chat_message_id: UUID
     user_id: UUID
+    project_id: UUID | None = None
     plan: WriteBackPlan
     feedback_history: list[WriteBackFeedbackEntry] = Field(default_factory=list)
     status: WriteBackProposalStatus

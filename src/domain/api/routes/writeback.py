@@ -7,7 +7,11 @@ from domain.auth.middleware import get_actor
 from domain.db.session import get_db
 from domain.schemas.common import ActorContext
 from domain.schemas.writeback import WriteBackProposalOut, WriteBackProposalRefine
-from domain.writeback.service import create_write_back_proposal, refine_write_back_proposal
+from domain.writeback.service import (
+    confirm_write_back_proposal,
+    create_write_back_proposal,
+    refine_write_back_proposal,
+)
 
 router = APIRouter(tags=["write-back"])
 
@@ -33,3 +37,12 @@ async def refine_proposal(
     actor: ActorContext = Depends(get_actor),
 ) -> WriteBackProposalOut:
     return await refine_write_back_proposal(db, proposal_id, payload.feedback, actor)
+
+
+@router.post("/write-back-proposals/{proposal_id}/confirm", response_model=WriteBackProposalOut)
+async def confirm_proposal(
+    proposal_id: UUID,
+    db: AsyncSession = Depends(get_db),
+    actor: ActorContext = Depends(get_actor),
+) -> WriteBackProposalOut:
+    return await confirm_write_back_proposal(db, proposal_id, actor)

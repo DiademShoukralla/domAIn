@@ -327,6 +327,56 @@ The LLM's `doc_target` hint is overridden when citations provide a deterministic
 
 Both endpoints gate on `can_access()` against the message/proposal owner. `POST` returns `409` if a proposal already exists for that message.
 
+## Write-back confirm and execution (Pass 3c-2)
+
+Date: 2026-09-23
+
+Pass 3c-2 implements step 3–4 of the write-back flow: confirming a persisted proposal executes GitHub and/or Linear writes. Classification and refinement remain in 3c-1; the confirm handler never reads write-back content from the request body.
+
+### API
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `POST` | `/write-back-proposals/{id}/confirm` | Execute the persisted plan; no request body |
+
+### Status guard
+
+`POST /confirm` rejects with `400` when `proposal.status != "proposed"`, matching the refine endpoint guard. On success only, the handler sets `status = "executed"` and `executed_at = now()`. A duplicate confirm call therefore cannot execute twice.
+
+### Re-fetch from persistence
+
+The handler always re-loads:
+
+- `WriteBackPlan` via `WriteBackPlan.model_validate(proposal.plan)`
+- `CouncilDecision` via `_parse_council_decision(message)` on the linked council message
+- Original user query from the most recent user message in the same session before the council result
+
+No client-supplied plan fields or decision payloads are trusted.
+
+### GitHub target-repo resolution
+
+v1 resolves the PR target by listing the actor's accessible `github_repo` `KnowledgeSource` rows (joined to their `Connection`). The source's `external_ref` (`owner/repo`) is the repository. **Exactly one** such source must exist (dogfooding demo-data assumption). Zero or multiple matches return `400` with a clear error — no guessing.
+
+### GitHub execution mechanics
+
+When `needs_doc_update` is true, write-back uses the GitHub App installation token (`get_installation_access_token`) in three steps:
+
+1. **Branch** — create `domain/write-back-{proposal-id-prefix}-{date}` from the repo default branch.
+2. **Commit** — create or update one file on that branch.
+3. **Pull request** — open a PR against the default branch.
+
+**Existing doc** (`doc_target == "existing"`): fetch `existing_doc_path` from the repo, append a dated `## Council write-back (YYYY-MM-DD)` section (ADR-style amendment), and add a row to an existing `## Changelog` table or create the table if absent. This mirrors how this project's own living ADRs record amendments.
+
+**New doc** (`doc_target == "new"`): add `docs/business/council-decisions/{date}-{slug}.md` with a deterministic template — date, original query, overall verdict, all persona opinions verbatim, synthesis.
+
+### Linear execution mechanics
+
+When `needs_roadmap_item` is true, the handler resolves the actor's single accessible `linear` `KnowledgeSource` and uses its `external_ref` as the team ID (same value the ingestion pipeline uses). It searches for an issue with the deterministic title `Council: {query}`; if found, updates description; otherwise creates a new issue. Mutations set `createAsUser: "domAIn"` and `displayIconUrl` from `{APP_BASE_URL}/static/icon.png` per the Pass 3 note above.
+
+### Partial-failure tradeoff (v1)
+
+Execution runs GitHub first (when needed), then Linear (when needed). If any step fails after earlier steps succeeded, **`proposal.status` stays `"proposed"`** so the operator can retry the same confirm call. We accept as a stated v1 tradeoff that a rare partial failure may leave an orphaned GitHub branch with no PR — recoverable manually; distributed rollback is not worth the complexity at this scale.
+
 ## Changelog
 
 | Date | Change |
@@ -337,3 +387,4 @@ Both endpoints gate on `can_access()` against the message/proposal owner. `POST`
 | 2026-09-23 | Linear `actor=app` authorization; `APP_BASE_URL` audit and Pass 3 Linear write-back display note. |
 | 2026-09-23 | Pass 3a: `persona_model` setting for council persona nodes; independent from chair model. |
 | 2026-09-23 | Pass 3c-1: write-back proposal/refinement state machine, `WriteBackPlan` schema, supervisor-model classification, citation-frequency doc selection. |
+| 2026-09-23 | Pass 3c-2: write-back confirm endpoint, GitHub branch/commit/PR execution, Linear issue create/update, target-repo resolution, partial-failure tradeoff. |

@@ -8,6 +8,7 @@ from httpx_ws import aconnect_ws
 from httpx_ws.transport import ASGIWebSocketTransport
 from starlette.testclient import TestClient
 
+from domain.auth.api_key import ensure_bootstrap_api_key
 from domain.config import get_settings
 from domain.main import app
 from domain.schemas.chat import ChatIntent, ResponseKind
@@ -26,6 +27,8 @@ async def test_chat_history_persists_messages(db_session) -> None:
         ) as model_factory_mock,
     ):
         classify_mock.return_value = ChatIntent.GREETING
+
+        await ensure_bootstrap_api_key(db_session)
 
         transport = ASGIWebSocketTransport(app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:

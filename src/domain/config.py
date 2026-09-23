@@ -39,6 +39,11 @@ class Settings(BaseSettings):
     chunk_target_tokens: int = 512
     chunk_overlap_tokens: int = 50
 
+    anthropic_api_key: str = ""
+    supervisor_model: str = "anthropic:claude-haiku-4-5"
+    retrieval_answer_model: str = "anthropic:claude-sonnet-4-20250514"
+    council_chair_model: str = "anthropic:claude-sonnet-4-20250514"
+
 
 @lru_cache
 def get_settings() -> Settings:

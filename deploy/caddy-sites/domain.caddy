@@ -1,0 +1,8 @@
+domain.didi.build {
+	handle /app/* {
+		respond "Frontend not yet deployed" 503
+	}
+	handle {
+		reverse_proxy domain-api:8080
+	}
+}

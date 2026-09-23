@@ -9,36 +9,35 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
+      packages: write
 
     steps:
       - uses: actions/checkout@v4
 
-      - uses: google-github-actions/auth@v2
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
         with:
-          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
-          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
-
-      - uses: google-github-actions/setup-gcloud@v2
-
-      - name: Configure Docker for Artifact Registry
-        run: gcloud auth configure-docker ${{ secrets.GCP_REGION }}-docker.pkg.dev --quiet
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push image
         env:
-          IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/domain:${{ github.sha }}
+          GHCR_OWNER: ${{ github.repository_owner }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
+          IMAGE="ghcr.io/$(echo "$GHCR_OWNER" | tr '[:upper:]' '[:lower:]')/domain:${IMAGE_TAG}"
           docker build -t "$IMAGE" .
           docker push "$IMAGE"
 
-      - name: Deploy to Cloud Run
-        env:
-          IMAGE: ${{ secrets.GCP_REGION }}-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_ARTIFACT_REPO }}/domain:${{ github.sha }}
-        run: |
-          gcloud run deploy domain-api \
-            --image "$IMAGE" \
-            --region "${{ secrets.GCP_REGION }}" \
-            --platform managed \
-            --allow-unauthenticated \
-            --set-secrets "DATABASE_URL=domain-database-url:latest,TOKEN_ENCRYPTION_KEY=domain-token-encryption-key:latest,BOOTSTRAP_API_KEY=domain-bootstrap-api-key:latest,GITHUB_CLIENT_ID=domain-github-client-id:latest,GITHUB_CLIENT_SECRET=domain-github-client-secret:latest,LINEAR_CLIENT_ID=domain-linear-client-id:latest,LINEAR_CLIENT_SECRET=domain-linear-client-secret:latest,VOYAGE_API_KEY=domain-voyage-api-key:latest" \
-            --set-env-vars "APP_BASE_URL=${{ secrets.APP_BASE_URL }},GITHUB_REDIRECT_URI=${{ secrets.GITHUB_REDIRECT_URI }},LINEAR_REDIRECT_URI=${{ secrets.LINEAR_REDIRECT_URI }}"
+      - name: Deploy to droplet
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DROPLET_HOST }}
+          username: ${{ secrets.DROPLET_USER }}
+          key: ${{ secrets.DROPLET_SSH_KEY }}
+          script: |
+            cd ~/domAIn && git pull
+            IMAGE_TAG=${{ github.sha }} bash deploy/deploy.sh \
+              --compose-file docker-compose.prod.yml \
+              --env-file .env.production

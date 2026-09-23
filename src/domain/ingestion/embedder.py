@@ -11,8 +11,11 @@ def _get_client() -> Any:
     settings = get_settings()
     if not settings.voyage_api_key:
         raise RuntimeError("VOYAGE_API_KEY is not configured")
+    client_kwargs: dict[str, str] = {"api_key": settings.voyage_api_key}
+    if settings.voyage_base_url:
+        client_kwargs["base_url"] = settings.voyage_base_url
     client_cls = getattr(voyageai, "Client")
-    return cast(Any, client_cls(api_key=settings.voyage_api_key))
+    return cast(Any, client_cls(**client_kwargs))
 
 
 async def embed_documents(texts: list[str]) -> list[list[float]]:

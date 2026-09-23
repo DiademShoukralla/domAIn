@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     linear_scopes: str = "read write"
 
     voyage_api_key: str = ""
+    voyage_base_url: str = ""
     voyage_model: str = "voyage-context-4"
     embedding_dimensions: int = 1024
 

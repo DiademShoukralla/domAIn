@@ -192,6 +192,21 @@ prompt_for_var() {
     return
   fi
 
+  if [[ "$var_name" == "VOYAGE_BASE_URL" ]]; then
+    if [[ -n "$current" ]]; then
+      echo "Current value: $(mask_value "$current")"
+      read_line choice "Keep current value? [Y/n]: "
+      if [[ "$choice" =~ ^[Nn]$ ]]; then
+        read_line choice "Enter value (optional, press Enter to skip): "
+        ENV_VALUES["$var_name"]="$choice"
+      fi
+    else
+      read_line choice "Enter value (optional, press Enter to skip): "
+      ENV_VALUES["$var_name"]="$choice"
+    fi
+    return
+  fi
+
   if [[ "$var_name" == "BOOTSTRAP_API_KEY" ]]; then
     if [[ -n "$current" ]]; then
       echo "Current value: $(mask_value "$current")"

@@ -13,7 +13,7 @@ from domain.schemas.chat import (
     ChatRole,
     ResponseKind,
 )
-from domain.schemas.common import ActorContext, Citation
+from domain.schemas.common import ActorContext, Citation, CouncilDecision
 
 
 def _citation_payload(citations: list[Citation]) -> list[dict[str, object]]:
@@ -30,6 +30,7 @@ async def _persist_message(
     classified_intent: ChatIntent | None = None,
     response_kind: ResponseKind | None = None,
     citations: list[Citation] | None = None,
+    council_decision: CouncilDecision | None = None,
 ) -> ChatMessage:
     record = ChatMessage(
         session_id=session_id,
@@ -40,6 +41,7 @@ async def _persist_message(
         classified_intent=classified_intent.value if classified_intent else None,
         response_kind=response_kind.value if response_kind else None,
         citations=_citation_payload(citations or []),
+        council_decision=council_decision.model_dump(mode="json") if council_decision else None,
     )
     db.add(record)
     await db.commit()
@@ -49,6 +51,11 @@ async def _persist_message(
 
 def _to_message_out(record: ChatMessage) -> ChatMessageOut:
     citations = [Citation.model_validate(item) for item in record.citations]
+    council_decision = (
+        CouncilDecision.model_validate(record.council_decision)
+        if record.council_decision is not None
+        else None
+    )
     return ChatMessageOut(
         id=record.id,
         session_id=record.session_id,
@@ -57,6 +64,7 @@ def _to_message_out(record: ChatMessage) -> ChatMessageOut:
         classified_intent=ChatIntent(record.classified_intent) if record.classified_intent else None,
         response_kind=ResponseKind(record.response_kind) if record.response_kind else None,
         citations=citations,
+        council_decision=council_decision,
         created_at=record.created_at,
     )
 
@@ -89,6 +97,7 @@ async def process_message(
         classified_intent=response.classified_intent,
         response_kind=response.response_kind,
         citations=response.citations,
+        council_decision=response.council_decision,
     )
     return response
 

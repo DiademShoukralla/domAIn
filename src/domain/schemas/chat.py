@@ -4,7 +4,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field
 
-from domain.schemas.common import Citation
+from domain.schemas.common import Citation, CouncilDecision
 
 
 class ChatIntent(StrEnum):
@@ -18,6 +18,7 @@ class ChatIntent(StrEnum):
 class ResponseKind(StrEnum):
     DIRECT_ANSWER = "direct_answer"
     COUNCIL_PENDING_HANDOFF = "council_pending_handoff"
+    COUNCIL_RESULT = "council_result"
     STUB_NOT_IMPLEMENTED = "stub_not_implemented"
 
 
@@ -39,6 +40,7 @@ class ChatMessageOut(BaseModel):
     classified_intent: ChatIntent | None = None
     response_kind: ResponseKind | None = None
     citations: list[Citation] = Field(default_factory=list)
+    council_decision: CouncilDecision | None = None
     created_at: datetime
 
 
@@ -48,6 +50,7 @@ class ChatResponse(BaseModel):
     classified_intent: ChatIntent
     response_kind: ResponseKind
     citations: list[Citation] = Field(default_factory=list)
+    council_decision: CouncilDecision | None = None
 
 
 class ChatHistoryResponse(BaseModel):

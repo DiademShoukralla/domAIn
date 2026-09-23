@@ -34,12 +34,16 @@ class Connection(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
     provider: Mapped[Provider] = mapped_column(
-        Enum(Provider, name="provider", values_callable=lambda enum_cls: [e.value for e in enum_cls]),
+        Enum(
+            Provider, name="provider", values_callable=lambda enum_cls: [e.value for e in enum_cls]
+        ),
         nullable=False,
     )
     access_token: Mapped[str | None] = mapped_column(Text, nullable=True)
     refresh_token: Mapped[str | None] = mapped_column(Text, nullable=True)
-    token_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    token_expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     installation_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
     external_account_id: Mapped[str] = mapped_column(String(255), nullable=False)
     external_account_name: Mapped[str] = mapped_column(String(255), nullable=False)
@@ -60,9 +64,15 @@ class KnowledgeSource(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True, index=True)
-    project_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True, index=True)
+    project_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True, index=True
+    )
     source_type: Mapped[SourceType] = mapped_column(
-        Enum(SourceType, name="source_type", values_callable=lambda enum_cls: [e.value for e in enum_cls]),
+        Enum(
+            SourceType,
+            name="source_type",
+            values_callable=lambda enum_cls: [e.value for e in enum_cls],
+        ),
         nullable=False,
     )
     external_ref: Mapped[str] = mapped_column(String(512), nullable=False)
@@ -89,7 +99,9 @@ class KnowledgeSource(Base):
     )
 
     connection: Mapped["Connection"] = relationship(back_populates="knowledge_sources")
-    chunks: Mapped[list["Chunk"]] = relationship(back_populates="knowledge_source", cascade="all, delete-orphan")
+    chunks: Mapped[list["Chunk"]] = relationship(
+        back_populates="knowledge_source", cascade="all, delete-orphan"
+    )
 
 
 class APIKey(Base):
@@ -98,7 +110,9 @@ class APIKey(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     key_hash: Mapped[str] = mapped_column(String(128), nullable=False, unique=True)
     user_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True, index=True)
-    project_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True, index=True)
+    project_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True, index=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
@@ -110,7 +124,9 @@ class ChatMessage(Base):
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     session_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
     user_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), nullable=False, index=True)
-    project_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True, index=True)
+    project_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), nullable=True, index=True
+    )
     role: Mapped[str] = mapped_column(String(32), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
     classified_intent: Mapped[str | None] = mapped_column(String(64), nullable=True)
@@ -126,7 +142,10 @@ class Chunk(Base):
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     knowledge_source_id: Mapped[uuid.UUID] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("knowledge_sources.id", ondelete="CASCADE"), nullable=False, index=True
+        UUID(as_uuid=True),
+        ForeignKey("knowledge_sources.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
     )
     document_id: Mapped[str] = mapped_column(String(512), nullable=False)
     chunk_index: Mapped[int] = mapped_column(Integer, nullable=False)
@@ -143,6 +162,8 @@ class Chunk(Base):
     knowledge_source: Mapped["KnowledgeSource"] = relationship(back_populates="chunks")
 
     __table_args__ = (
-        Index("ix_chunks_document", "knowledge_source_id", "document_id", "chunk_index", unique=True),
+        Index(
+            "ix_chunks_document", "knowledge_source_id", "document_id", "chunk_index", unique=True
+        ),
         Index("ix_chunks_content_tsv", "content_tsv", postgresql_using="gin"),
     )

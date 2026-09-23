@@ -21,7 +21,9 @@ router = APIRouter(prefix="/sources", tags=["sources"])
 
 def _validate_source_type_for_connection(source_type: SourceType, provider: Provider) -> None:
     if source_type == SourceType.GITHUB_REPO and provider != Provider.GITHUB:
-        raise HTTPException(status_code=400, detail="github_repo sources require a GitHub connection")
+        raise HTTPException(
+            status_code=400, detail="github_repo sources require a GitHub connection"
+        )
     if source_type == SourceType.LINEAR and provider != Provider.LINEAR:
         raise HTTPException(status_code=400, detail="linear sources require a Linear connection")
 
@@ -42,7 +44,9 @@ async def list_sources(
         for source in result.scalars().all()
         if can_access(actor.user_id, actor.project_id, source.user_id, source.project_id)
     ]
-    return KnowledgeSourceListResponse(sources=[KnowledgeSourceRead.model_validate(item) for item in sources])
+    return KnowledgeSourceListResponse(
+        sources=[KnowledgeSourceRead.model_validate(item) for item in sources]
+    )
 
 
 @router.post("", response_model=KnowledgeSourceRead, status_code=201)
@@ -53,7 +57,9 @@ async def create_source(
     actor: ActorContext = Depends(get_actor),
 ) -> KnowledgeSourceRead:
     connection = await db.get(Connection, payload.connection_id)
-    if connection is None or not can_access(actor.user_id, actor.project_id, connection.user_id, None):
+    if connection is None or not can_access(
+        actor.user_id, actor.project_id, connection.user_id, None
+    ):
         raise HTTPException(status_code=404, detail="Connection not found")
 
     _validate_source_type_for_connection(payload.source_type, connection.provider)
@@ -81,7 +87,9 @@ async def get_source(
     actor: ActorContext = Depends(get_actor),
 ) -> KnowledgeSourceRead:
     source = await db.get(KnowledgeSource, source_id)
-    if source is None or not can_access(actor.user_id, actor.project_id, source.user_id, source.project_id):
+    if source is None or not can_access(
+        actor.user_id, actor.project_id, source.user_id, source.project_id
+    ):
         raise HTTPException(status_code=404, detail="Knowledge source not found")
     return KnowledgeSourceRead.model_validate(source)
 
@@ -93,7 +101,9 @@ async def delete_source(
     actor: ActorContext = Depends(get_actor),
 ) -> None:
     source = await db.get(KnowledgeSource, source_id)
-    if source is None or not can_access(actor.user_id, actor.project_id, source.user_id, source.project_id):
+    if source is None or not can_access(
+        actor.user_id, actor.project_id, source.user_id, source.project_id
+    ):
         raise HTTPException(status_code=404, detail="Knowledge source not found")
     await db.delete(source)
     await db.commit()
@@ -107,7 +117,9 @@ async def refresh_source(
     actor: ActorContext = Depends(get_actor),
 ) -> KnowledgeSourceRead:
     source = await db.get(KnowledgeSource, source_id)
-    if source is None or not can_access(actor.user_id, actor.project_id, source.user_id, source.project_id):
+    if source is None or not can_access(
+        actor.user_id, actor.project_id, source.user_id, source.project_id
+    ):
         raise HTTPException(status_code=404, detail="Knowledge source not found")
 
     source.status = SourceStatus.PENDING

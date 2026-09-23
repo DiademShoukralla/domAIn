@@ -49,7 +49,9 @@ async def github_callback(
 
     installation = await fetch_installation(installation_id)
     await upsert_github_connection(db, user_id, installation_id, installation)
-    return RedirectResponse(url=f"{get_settings().app_base_url}/connections?provider=github&status=connected")
+    return RedirectResponse(
+        url=f"{get_settings().app_base_url}/connections?provider=github&status=connected"
+    )
 
 
 @router.get("/linear/authorize")
@@ -75,4 +77,6 @@ async def linear_callback(
     token = await linear_exchange_code(code, state=state)
     user_info = await linear_fetch_user(token["access_token"])
     await upsert_linear_connection(db, user_id, token, user_info)
-    return RedirectResponse(url=f"{get_settings().app_base_url}/connections?provider=linear&status=connected")
+    return RedirectResponse(
+        url=f"{get_settings().app_base_url}/connections?provider=linear&status=connected"
+    )

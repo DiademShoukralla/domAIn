@@ -25,6 +25,18 @@ You are working on **domAIn**, a multi-agent decision council backed by a hybrid
 - **OAuth is hand-rolled via authlib**, not a third-party OAuth platform. See ADR 0002.
 - **Docs-as-code:** business docs live in `docs/business/`, ADRs in `docs/adr/`. Updates go through PR.
 
+## Pre-PR checks (mandatory)
+
+Before opening any PR, you **must** run these locally and fix all failures:
+
+```bash
+ruff check src tests
+ruff format --check src tests
+mypy src/domain
+```
+
+The pre-commit hook (installed via `pre-commit install`) enforces ruff lint and format automatically on each commit once set up. It also runs `mypy src/domain`. The hook does **not** run pytest — integration tests require a real database and are too slow for commit-time checks; run `pytest` manually (or rely on CI) before opening a PR. If you change test code, check mypy coverage for `tests/` manually when needed; the hook only type-checks `src/domain`.
+
 ## Project structure
 
 ```

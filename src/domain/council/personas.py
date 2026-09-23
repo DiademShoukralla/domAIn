@@ -87,7 +87,9 @@ async def run_persona(
         actor_user_id=actor.user_id,
         actor_project_id=actor.project_id,
     )
-    context = _build_context(retrieval.chunks) if retrieval.chunks else "No indexed knowledge found."
+    context = (
+        _build_context(retrieval.chunks) if retrieval.chunks else "No indexed knowledge found."
+    )
     citations = _build_citations(retrieval.chunks)
 
     await emit_persona_status(status_queue, session_id, persona, "giving_recommendation")

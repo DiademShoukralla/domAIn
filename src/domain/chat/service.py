@@ -55,7 +55,9 @@ def _to_message_out(record: ChatMessage) -> ChatMessageOut:
         session_id=record.session_id,
         role=ChatRole(record.role),
         content=record.content,
-        classified_intent=ChatIntent(record.classified_intent) if record.classified_intent else None,
+        classified_intent=ChatIntent(record.classified_intent)
+        if record.classified_intent
+        else None,
         response_kind=ResponseKind(record.response_kind) if record.response_kind else None,
         citations=citations,
         created_at=record.created_at,

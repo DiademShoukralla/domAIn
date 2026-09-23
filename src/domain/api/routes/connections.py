@@ -25,7 +25,9 @@ async def list_connections(
         for connection in result.scalars().all()
         if can_access(actor.user_id, actor.project_id, connection.user_id, None)
     ]
-    return ConnectionListResponse(connections=[ConnectionRead.model_validate(item) for item in connections])
+    return ConnectionListResponse(
+        connections=[ConnectionRead.model_validate(item) for item in connections]
+    )
 
 
 @router.get("/{connection_id}", response_model=ConnectionRead)
@@ -35,7 +37,9 @@ async def get_connection(
     actor: ActorContext = Depends(get_actor),
 ) -> ConnectionRead:
     connection = await db.get(Connection, connection_id)
-    if connection is None or not can_access(actor.user_id, actor.project_id, connection.user_id, None):
+    if connection is None or not can_access(
+        actor.user_id, actor.project_id, connection.user_id, None
+    ):
         raise HTTPException(status_code=404, detail="Connection not found")
     return ConnectionRead.model_validate(connection)
 
@@ -47,7 +51,9 @@ async def delete_connection(
     actor: ActorContext = Depends(get_actor),
 ) -> None:
     connection = await db.get(Connection, connection_id)
-    if connection is None or not can_access(actor.user_id, actor.project_id, connection.user_id, None):
+    if connection is None or not can_access(
+        actor.user_id, actor.project_id, connection.user_id, None
+    ):
         raise HTTPException(status_code=404, detail="Connection not found")
     await db.delete(connection)
     await db.commit()

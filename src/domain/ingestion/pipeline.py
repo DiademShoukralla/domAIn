@@ -36,7 +36,9 @@ async def index_knowledge_source(session: AsyncSession, source_id: UUID) -> None
         if source.source_type == SourceType.GITHUB_REPO:
             if not connection.installation_id:
                 raise ValueError("GitHub connection is missing installation_id")
-            documents = await fetch_github_repo_documents(connection.installation_id, source.external_ref)
+            documents = await fetch_github_repo_documents(
+                connection.installation_id, source.external_ref
+            )
         elif source.source_type == SourceType.LINEAR:
             if not connection.access_token:
                 raise ValueError("Linear connection is missing access_token")

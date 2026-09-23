@@ -269,6 +269,64 @@ Pass 3a adds **`persona_model`** as its own `Settings` field (default `anthropic
 
 **Testing:** Pass 3a tests graph mechanics (all three personas invoked, schema validation) — not generated persona/chair text (per testing strategy above).
 
+## Write-back proposal and refinement (Pass 3c-1)
+
+Date: 2026-09-23
+
+Write-back is **not** automatic on council completion. It is an operator-confirmed, multi-round flow:
+
+1. **Propose** — operator triggers write-back on a completed council message; backend classifies and returns a `WriteBackPlan`.
+2. **Refine** — operator submits feedback; supervisor re-classifies with that feedback folded in; the same proposal row is updated (no second proposal).
+3. **Confirm** — operator confirms the plan (Pass 3c-2; not implemented in 3c-1).
+4. **Execute** — backend opens a GitHub PR or Linear mutation (Pass 3c-2 only).
+
+Pass 3c-1 covers steps 1–2 only. No GitHub or Linear API calls occur in this phase.
+
+### Persistence
+
+| Store | Shape |
+|-------|-------|
+| `chat_messages.council_decision` | Nullable JSONB, populated only when `response_kind == council_result` (same pattern as `citations`) |
+| `write_back_proposals` | One row per council message: `plan` (current `WriteBackPlan` JSONB), `feedback_history`, `status`, timestamps |
+
+Proposal `status` values: `proposed` (refinement allowed), `confirmed` (ready for execution in 3c-2), `executed` (set by 3c-2 with `executed_at`).
+
+### `WriteBackPlan` schema
+
+```python
+class WriteBackPlan(BaseModel):
+    needs_doc_update: bool
+    doc_target: Literal["existing", "new"] | None
+    existing_doc_path: str | None   # deterministic — not LLM-generated
+    new_doc_slug: str | None        # only when nothing existing fits
+    needs_roadmap_item: bool
+```
+
+### Classification model tier
+
+Write-back plan classification reuses **`supervisor_model`** (`get_supervisor_model()`), the same tier as intent routing. This is classification-shaped work (boolean flags, target type, slug suggestion), not chair-tier synthesis. No new model setting is added.
+
+Structured output: `WriteBackPlanClassification` via `with_structured_output()`, then merged with the citation heuristic below.
+
+### Citation-frequency doc target heuristic
+
+`existing_doc_path` is **never** LLM-generated. After classification:
+
+1. Tally `document_id` frequency across `council_decision.persona_opinions[].citations`.
+2. If any citations exist, pick the highest-frequency `document_id` → `doc_target = "existing"`, `existing_doc_path = <winner>`.
+3. Only when **no** citations exist → `doc_target = "new"`, `new_doc_slug` from the classifier.
+
+The LLM's `doc_target` hint is overridden when citations provide a deterministic winner.
+
+### API (Pass 3c-1)
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `POST` | `/chat/messages/{message_id}/write-back` | Create proposal, run classification, return plan |
+| `PATCH` | `/write-back-proposals/{id}` | Body: `{ "feedback": "..." }` — append feedback, re-classify, update same row |
+
+Both endpoints gate on `can_access()` against the message/proposal owner. `POST` returns `409` if a proposal already exists for that message.
+
 ## Changelog
 
 | Date | Change |
@@ -278,3 +336,4 @@ Pass 3a adds **`persona_model`** as its own `Settings` field (default `anthropic
 | 2026-09-23 | GitHub App replaces GitHub OAuth App; Linear stays on classic OAuth. |
 | 2026-09-23 | Linear `actor=app` authorization; `APP_BASE_URL` audit and Pass 3 Linear write-back display note. |
 | 2026-09-23 | Pass 3a: `persona_model` setting for council persona nodes; independent from chair model. |
+| 2026-09-23 | Pass 3c-1: write-back proposal/refinement state machine, `WriteBackPlan` schema, supervisor-model classification, citation-frequency doc selection. |

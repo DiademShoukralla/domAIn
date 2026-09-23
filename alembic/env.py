@@ -8,7 +8,14 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from domain.config import get_settings
 from domain.db.base import Base
-from domain.db.models import APIKey, ChatMessage, Chunk, Connection, KnowledgeSource  # noqa: F401
+from domain.db.models import (  # noqa: F401
+    APIKey,
+    ChatMessage,
+    Chunk,
+    Connection,
+    KnowledgeSource,
+    WriteBackProposal,
+)
 
 config = context.config
 if config.config_file_name is not None:

@@ -1,3 +1,4 @@
+from datetime import UTC, datetime, timedelta
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
@@ -41,8 +42,10 @@ async def writeback_fixtures(db_session):
     settings = get_settings()
     await ensure_bootstrap_api_key(db_session)
 
+    session_id = uuid4()
+    user_created_at = datetime.now(UTC)
     user_message = ChatMessage(
-        session_id=uuid4(),
+        session_id=session_id,
         user_id=settings.default_user_id,
         project_id=None,
         role=ChatRole.USER.value,
@@ -50,9 +53,10 @@ async def writeback_fixtures(db_session):
         classified_intent=ChatIntent.STRATEGIC_SESSION.value,
         response_kind=None,
         citations=[],
+        created_at=user_created_at,
     )
     council_message = ChatMessage(
-        session_id=user_message.session_id,
+        session_id=session_id,
         user_id=settings.default_user_id,
         project_id=None,
         role=ChatRole.ASSISTANT.value,
@@ -61,6 +65,7 @@ async def writeback_fixtures(db_session):
         response_kind=ResponseKind.COUNCIL_RESULT.value,
         citations=[],
         council_decision=_sample_council_decision().model_dump(mode="json"),
+        created_at=user_created_at + timedelta(seconds=1),
     )
     db_session.add(user_message)
     db_session.add(council_message)
@@ -288,7 +293,7 @@ async def test_confirm_leaves_status_proposed_on_partial_failure(
             new=AsyncMock(side_effect=RuntimeError("Linear failed after GitHub branch created")),
         ),
     ):
-        transport = ASGITransport(app=app)
+        transport = ASGITransport(app=app, raise_app_exceptions=False)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             response = await client.post(
                 f"/write-back-proposals/{proposal.id}/confirm",

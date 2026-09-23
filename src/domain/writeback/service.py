@@ -92,7 +92,10 @@ async def _get_original_query(db: AsyncSession, council_message: ChatMessage) ->
     )
     user_message = result.scalar_one_or_none()
     if user_message is None:
-        return council_message.content
+        raise HTTPException(
+            status_code=500,
+            detail="Could not find the original user query for this council message",
+        )
     return user_message.content
 
 
@@ -557,6 +560,9 @@ async def _linear_graphql(
     return cast(dict[str, Any], payload["data"])
 
 
+# NOTE: FindIssue / IssueCreate / IssueUpdate GraphQL shape below is untested against
+# Linear's live API — every existing test mocks these functions away. Run a manual
+# smoke test against a real Linear workspace before trusting this in production.
 async def _find_linear_issue_by_title(
     access_token: str,
     team_id: str,
@@ -581,6 +587,9 @@ async def _find_linear_issue_by_title(
     return str(nodes[0]["id"])
 
 
+# NOTE: IssueCreate / IssueUpdate mutation shape below is untested against Linear's
+# live API — every existing test mocks this function away. Run a manual smoke test
+# against a real Linear workspace before trusting this in production.
 async def _execute_linear_roadmap_write(
     *,
     db: AsyncSession,

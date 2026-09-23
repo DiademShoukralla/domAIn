@@ -3,7 +3,9 @@ from unittest.mock import AsyncMock, patch
 from uuid import uuid4
 
 import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import AsyncClient
+from httpx_ws import aconnect_ws
+from httpx_ws.transport import ASGIWebSocketTransport
 from starlette.testclient import TestClient
 
 from domain.config import get_settings
@@ -25,10 +27,11 @@ async def test_chat_history_persists_messages(db_session) -> None:
     ):
         classify_mock.return_value = ChatIntent.GREETING
 
-        transport = ASGITransport(app=app)
+        transport = ASGIWebSocketTransport(app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
-            async with client.websocket_connect(
-                f"/chat/ws?api_key={settings.bootstrap_api_key}",
+            async with aconnect_ws(
+                f"http://test/chat/ws?api_key={settings.bootstrap_api_key}",
+                client,
             ) as ws:
                 await ws.send_text(
                     json.dumps({"session_id": str(session_id), "content": "Hello there"})

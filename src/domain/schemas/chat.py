@@ -40,6 +40,7 @@ class ChatMessageOut(BaseModel):
     classified_intent: ChatIntent | None = None
     response_kind: ResponseKind | None = None
     citations: list[Citation] = Field(default_factory=list)
+    council_decision: CouncilDecision | None = None
     created_at: datetime
 
 

@@ -230,6 +230,28 @@ The App **private key** is a higher blast-radius secret than a classic OAuth cli
 
 Linear has no App-equivalent; it remains on **classic OAuth** via authlib (`LINEAR_CLIENT_ID` / `LINEAR_CLIENT_SECRET`, encrypted access token on `Connection`).
 
+## Linear actor authorization and `APP_BASE_URL`
+
+Date: 2026-09-23
+
+### Linear `actor=app`
+
+Linear has no GitHub-App-style installation model, but OAuth supports an **`actor=app`** query parameter on the authorization URL. domAIn adds `actor=app` in `linear_authorize_url()` so API actions authorized through the connection are attributed to the **application**, not the connecting user — the same product intent as GitHub App installation-scoped write-back, achieved as a small addition to the existing classic OAuth flow.
+
+**Pass 3 write-back note (not implemented yet):** when implementing Linear `issueCreate` / `commentCreate` mutations, set **`createAsUser`** (e.g. `"domAIn"`) and **`displayIconUrl`** on the mutation input so actions render as **"domAIn (via Application)"** rather than a bare "Application" label. No write-back mutation code exists in Pass 1–2; this is documented here so Pass 3 does not rediscover it.
+
+### `APP_BASE_URL` audit
+
+`Settings.app_base_url` (`APP_BASE_URL` env var) is **read and used today**, but only in one place:
+
+| Consumer | Usage |
+|----------|--------|
+| `domain/api/routes/oauth.py` | Post-connect redirect after GitHub App setup or Linear OAuth callback: `{app_base_url}/connections?provider=…&status=connected` |
+
+It is **not** used for OAuth redirect URIs (those are separate `GITHUB_*` / `LINEAR_REDIRECT_URI` settings), Caddy configuration, or LLM/embedding calls. No code performs localhost-specific string matching on `app_base_url` — it is only interpolated as a URL prefix.
+
+**Production:** set `APP_BASE_URL=https://domain.didi.build` so OAuth callbacks redirect users to the correct host. The Pydantic default (`http://localhost:8000`) is for local development only.
+
 ## Changelog
 
 | Date | Change |
@@ -237,3 +259,4 @@ Linear has no App-equivalent; it remains on **classic OAuth** via authlib (`LINE
 | 2026-09-22 | Initial decisions: FastAPI, pgvector, Voyage, LangChain, RRF, simple chunking, hand-rolled OAuth, write-back via GitHub PR + Linear, testing strategy, CI/CD. |
 | 2026-09-23 | Authentication model: API-key HTTP auth (`AuthMiddleware`, `validate_api_key`, `ActorContext`) and WebSocket manual validation exception. |
 | 2026-09-23 | GitHub App replaces GitHub OAuth App; Linear stays on classic OAuth. |
+| 2026-09-23 | Linear `actor=app` authorization; `APP_BASE_URL` audit and Pass 3 Linear write-back display note. |

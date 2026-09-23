@@ -24,7 +24,10 @@ def get_linear_oauth_client(state: str | None = None) -> AsyncOAuth2Client:
 
 def linear_authorize_url(state: str) -> str:
     client = get_linear_oauth_client(state=state)
-    uri, _ = client.create_authorization_url("https://linear.app/oauth/authorize")
+    uri, _ = client.create_authorization_url(
+        "https://linear.app/oauth/authorize",
+        actor="app",
+    )
     return cast(str, uri)
 
 

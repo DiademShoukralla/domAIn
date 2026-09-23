@@ -22,6 +22,9 @@ dependencies = [
     "pgvector>=0.3.6",
     "tiktoken>=0.8.0",
     "python-multipart>=0.0.12",
+    "langchain>=0.3.0",
+    "langchain-anthropic>=0.3.0",
+    "langchain-core>=0.3.0",
 ]
 
 [project.optional-dependencies]
@@ -55,7 +58,7 @@ packages = ["domain"]
 mypy_path = "src"
 
 [[tool.mypy.overrides]]
-module = ["authlib.*", "voyageai", "voyageai.*"]
+module = ["authlib.*", "voyageai", "voyageai.*", "langchain.*", "langchain_anthropic.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

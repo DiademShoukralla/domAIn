@@ -174,8 +174,27 @@ No separate staging environment for v1. PR CI is the quality gate; `main` is pro
 - Write-back via PR enforces human review on all source-of-truth changes, consistent with the project's docs-as-code philosophy.
 - No staging environment means deploy discipline matters; PR CI must be trustworthy.
 
+## Authentication model
+
+Date: 2026-09-23
+
+### API key auth for HTTP routes
+
+Pass 1 shipped API-key authentication without a formal ADR. HTTP requests authenticate via an `X-API-Key` header. `AuthMiddleware` (Starlette `BaseHTTPMiddleware`) validates the key on every protected HTTP route by calling `validate_api_key()`, which SHA-256-hashes the presented key, looks up the matching `api_keys` row, and resolves an `ActorContext` (`user_id`, optional `project_id`). Missing or invalid keys return `401`.
+
+Public paths bypass auth and receive a default `ActorContext` using `default_user_id`: `/health`, `/ready`, OpenAPI docs, and all `/oauth/*` routes.
+
+A bootstrap API key is inserted on application startup from `BOOTSTRAP_API_KEY` when no matching hash exists in the database.
+
+### WebSocket exception
+
+`BaseHTTPMiddleware` does **not** run for WebSocket connections. The unified chat WebSocket endpoint (`/chat/ws`) therefore performs **manual** API-key validation on connect (query parameter `api_key`), reusing the same `validate_api_key()` function and `ActorContext` resolution as HTTP routes. Connections without a valid key are rejected before `accept()`.
+
+**Rationale:** Reusing `validate_api_key()` keeps one identity model across HTTP and WebSocket. Manual WS validation is required because middleware cannot protect the upgrade handshake.
+
 ## Changelog
 
 | Date | Change |
 |------|--------|
 | 2026-09-22 | Initial decisions: FastAPI, pgvector, Voyage, LangChain, RRF, simple chunking, hand-rolled OAuth, write-back via GitHub PR + Linear, testing strategy, CI/CD. |
+| 2026-09-23 | Authentication model: API-key HTTP auth (`AuthMiddleware`, `validate_api_key`, `ActorContext`) and WebSocket manual validation exception. |

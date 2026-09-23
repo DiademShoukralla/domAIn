@@ -114,6 +114,54 @@ Merging them would couple routing accuracy to synthesis quality in testing and m
 
 The design system enforces this: the Composer component has **no routing toggle, no mode selector, no "Simple vs. Council" switch.** The user types a message; the supervisor decides the path. Implementation must not add UI controls that bypass or override supervisor routing.
 
+## Chat request/response data contract
+
+Date: 2026-09-23
+
+Pass 2 formalizes the wire contract for the unified chat surface. The supervisor architecture above is unchanged; this section specifies the Pydantic shapes the frontend consumes.
+
+### WebSocket transport
+
+- **Endpoint:** `GET /chat/ws?api_key=<key>` (API key validated manually on connect; see ADR 0002 authentication model).
+- **Client → server frame:** `ChatMessageIn` — `{ "session_id": "<uuid>", "content": "<text>" }`.
+- **Server → client frame:** `ChatResponse` — see below.
+- **History:** `GET /chat/sessions/{session_id}/messages` returns persisted `ChatMessageOut` rows for the authenticated actor.
+
+Messages persist in `chat_messages` (session id, role, content, classified intent, response kind, citations JSON, timestamps) even though the UI presents chat as ephemeral.
+
+### Intent labels (supervisor output)
+
+| Value | Meaning |
+|-------|---------|
+| `greeting` | Small talk; no retrieval |
+| `simple_retrieval` | Factual question answered from the knowledge layer |
+| `strategic_session` | Hand off to the council subgraph |
+| `linear_read` | Linear fetch intent (stub in Pass 2) |
+| `linear_write` | Linear update intent (stub in Pass 2) |
+
+Classifier model: **`claude-haiku-4-5`** (supervisor only; council chair uses a stronger model per the table above).
+
+### Response kind (frontend voice mapping)
+
+| `response_kind` | Handler paths | Design-system voice |
+|-----------------|---------------|---------------------|
+| `direct_answer` | `greeting`, `simple_retrieval` | `dom-msg--direct` |
+| `council_pending_handoff` | `strategic_session` | `dom-msg--pending` |
+| `stub_not_implemented` | `linear_read`, `linear_write` | plain text (no variant class) |
+
+`ChatResponse` fields:
+
+```python
+class ChatResponse(BaseModel):
+    session_id: UUID
+    content: str
+    classified_intent: ChatIntent
+    response_kind: ResponseKind
+    citations: list[Citation]  # populated for simple_retrieval
+```
+
+`simple_retrieval` responses include `Citation` objects (`document_id`, `chunk_index`, `knowledge_source_id`, `excerpt`) so the UI can render `CodeCitation` blocks.
+
 ## Consequences
 
 - Unified chat UX with no mode selector simplifies the frontend and matches user mental models ("I ask domAIn a question").
@@ -122,3 +170,4 @@ The design system enforces this: the Composer component has **no routing toggle,
 - LLM synthesis costs one additional LLM call per council review but produces meaningfully better output than rule-based aggregation.
 - Supervisor and chair model tiers can be tuned independently as usage data arrives.
 - The router eval dataset is a Phase 1 deliverable; persona output eval is explicitly Phase 2.
+- Chat wire contract (`ChatMessageIn`, `ChatResponse`, `response_kind` voice mapping) is documented in the dated section above.

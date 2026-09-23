@@ -41,8 +41,8 @@ class Settings(BaseSettings):
 
     anthropic_api_key: str = ""
     supervisor_model: str = "anthropic:claude-haiku-4-5"
-    retrieval_answer_model: str = "anthropic:claude-sonnet-4-20250514"
-    council_chair_model: str = "anthropic:claude-sonnet-4-20250514"
+    retrieval_answer_model: str = "anthropic:claude-sonnet-5"
+    council_chair_model: str = "anthropic:claude-sonnet-5"
 
 
 @lru_cache

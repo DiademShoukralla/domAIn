@@ -1,4 +1,5 @@
 import json
+import logging
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, WebSocket, WebSocketDisconnect, status
@@ -10,6 +11,8 @@ from domain.chat.service import get_session_messages, process_message
 from domain.db.session import async_session_factory, get_db
 from domain.schemas.chat import ChatHistoryResponse, ChatMessageIn
 from domain.schemas.common import ActorContext
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -55,8 +58,9 @@ async def chat_websocket(
             await websocket.send_text(response.model_dump_json())
     except WebSocketDisconnect:
         return
-    except Exception as exc:
-        await websocket.close(code=status.WS_1011_INTERNAL_ERROR, reason=str(exc)[:120])
+    except Exception:
+        logger.exception("WebSocket chat handler failed")
+        await websocket.close(code=status.WS_1011_INTERNAL_ERROR, reason="Internal error")
 
 
 @router.get("/sessions/{session_id}/messages", response_model=ChatHistoryResponse)

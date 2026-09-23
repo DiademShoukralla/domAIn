@@ -5,3 +5,9 @@ def test_supervisor_and_chair_use_different_models() -> None:
     settings = get_settings()
     assert settings.supervisor_model != settings.council_chair_model
     assert settings.supervisor_model == "anthropic:claude-haiku-4-5"
+
+
+def test_persona_model_is_independently_configured() -> None:
+    settings = get_settings()
+    assert settings.persona_model == "anthropic:claude-sonnet-5"
+    assert settings.persona_model != settings.supervisor_model

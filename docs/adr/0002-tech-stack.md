@@ -252,6 +252,23 @@ It is **not** used for OAuth redirect URIs (those are separate `GITHUB_*` / `LIN
 
 **Production:** set `APP_BASE_URL=https://domain.didi.build` so OAuth callbacks redirect users to the correct host. The Pydantic default (`http://localhost:8000`) is for local development only.
 
+## Council persona model setting
+
+Date: 2026-09-23
+
+Pass 3a adds **`persona_model`** as its own `Settings` field (default `anthropic:claude-sonnet-5`), alongside `supervisor_model`, `retrieval_answer_model`, and `council_chair_model`.
+
+| Setting | Default | Used by |
+|---------|---------|---------|
+| `supervisor_model` | `anthropic:claude-haiku-4-5` | Intent classifier |
+| `retrieval_answer_model` | `anthropic:claude-sonnet-5` | Simple retrieval answers |
+| `persona_model` | `anthropic:claude-sonnet-5` | Council persona nodes (UX, dev experience, business) |
+| `council_chair_model` | `anthropic:claude-sonnet-5` | Chair synthesis |
+
+**Rationale:** Persona reasoning and chair synthesis are separate eval surfaces. The supervisor/chair split already proved that independent model tiers let us tune routing vs. synthesis without coupling failures. Persona output is a third surface — it may need a different capability/cost tradeoff once Phase 2's eval pipeline has data. Reusing `council_chair_model` would couple persona phrasing quality to chair synthesis tuning.
+
+**Testing:** Pass 3a tests graph mechanics (all three personas invoked, schema validation) — not generated persona/chair text (per testing strategy above).
+
 ## Changelog
 
 | Date | Change |
@@ -260,3 +277,4 @@ It is **not** used for OAuth redirect URIs (those are separate `GITHUB_*` / `LIN
 | 2026-09-23 | Authentication model: API-key HTTP auth (`AuthMiddleware`, `validate_api_key`, `ActorContext`) and WebSocket manual validation exception. |
 | 2026-09-23 | GitHub App replaces GitHub OAuth App; Linear stays on classic OAuth. |
 | 2026-09-23 | Linear `actor=app` authorization; `APP_BASE_URL` audit and Pass 3 Linear write-back display note. |
+| 2026-09-23 | Pass 3a: `persona_model` setting for council persona nodes; independent from chair model. |

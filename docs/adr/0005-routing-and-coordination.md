@@ -162,6 +162,43 @@ class ChatResponse(BaseModel):
 
 `simple_retrieval` responses include `Citation` objects (`document_id`, `chunk_index`, `knowledge_source_id`, `excerpt`) so the UI can render `CodeCitation` blocks.
 
+## Council result wire contract (Pass 3a)
+
+Date: 2026-09-23
+
+Pass 3a replaces the Pass 2 council stub with a completed orchestrator-worker graph. The `strategic_session` path now returns a full `CouncilDecision` instead of a pending handoff.
+
+### `ResponseKind` changes
+
+| Before (Pass 2) | After (Pass 3a) |
+|-----------------|-----------------|
+| `council_pending_handoff` | **removed** |
+| — | `council_result` |
+
+### Updated response-kind → design-system voice mapping
+
+| `response_kind` | Handler paths | Design-system voice |
+|-----------------|---------------|---------------------|
+| `direct_answer` | `greeting`, `simple_retrieval` | `dom-msg--direct` |
+| `council_result` | `strategic_session` (completed council) | `dom-chair-block` (synthesis in `content`; structured `PersonaMessage` + `ChairBlock` from `council_decision`) |
+| `stub_not_implemented` | `linear_read`, `linear_write` | plain text (no variant class) |
+
+### `ChatResponse` schema extension
+
+```python
+class ChatResponse(BaseModel):
+    session_id: UUID
+    content: str                              # chair synthesis narrative
+    classified_intent: ChatIntent
+    response_kind: ResponseKind
+    citations: list[Citation] = []            # populated for simple_retrieval
+    council_decision: CouncilDecision | None = None  # populated for council_result
+```
+
+A completed council response sets `response_kind=council_result` and populates `council_decision` with three `PersonaOpinion` objects plus `overall_verdict` and `synthesis`. The top-level `content` field carries the chair synthesis for clients that render a single message bubble; structured UI renders per-persona opinions and the chair block from `council_decision`.
+
+**Note:** Live status updates during council execution (persona-by-persona progress) are Pass 3b; Pass 3a returns only the final completed frame.
+
 ## Consequences
 
 - Unified chat UX with no mode selector simplifies the frontend and matches user mental models ("I ask domAIn a question").
@@ -170,4 +207,5 @@ class ChatResponse(BaseModel):
 - LLM synthesis costs one additional LLM call per council review but produces meaningfully better output than rule-based aggregation.
 - Supervisor and chair model tiers can be tuned independently as usage data arrives.
 - The router eval dataset is a Phase 1 deliverable; persona output eval is explicitly Phase 2.
-- Chat wire contract (`ChatMessageIn`, `ChatResponse`, `response_kind` voice mapping) is documented in the dated section above.
+- Chat wire contract (`ChatMessageIn`, `ChatResponse`, `response_kind` voice mapping) is documented in the dated sections above.
+- Pass 3a council results expose structured `CouncilDecision` on the wire; frontend renders `PersonaMessage` and `ChairBlock` per design system.

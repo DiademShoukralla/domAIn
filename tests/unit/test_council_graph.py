@@ -70,7 +70,6 @@ async def test_council_graph_invokes_all_three_personas() -> None:
             {
                 "request": request,
                 "actor": actor,
-                "db": AsyncMock(),
                 "persona_opinions": [],
                 "decision": None,
             }

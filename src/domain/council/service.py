@@ -18,7 +18,6 @@ async def run_council(
         {
             "request": request,
             "actor": actor,
-            "db": db,
             "persona_opinions": [],
             "decision": None,
         }

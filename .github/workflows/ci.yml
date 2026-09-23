@@ -44,6 +44,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
+      - name: Fetch main for test diff
+        if: github.event_name == 'pull_request'
+        run: git fetch origin main
+
+      - name: Add main worktree
+        if: github.event_name == 'pull_request'
+        run: git worktree add ../domain-main origin/main
+
       - name: Lint
         run: ruff check src tests
 
@@ -63,7 +71,11 @@ jobs:
 
       - name: Build test summary
         if: always() && github.event_name == 'pull_request'
-        run: python scripts/ci_test_summary.py unit-results.xml integration-results.xml > test-summary.md
+        run: python scripts/ci_test_summary.py unit-results.xml integration-results.xml --main-worktree ../domain-main > test-summary.md
+
+      - name: Remove main worktree
+        if: always() && github.event_name == 'pull_request'
+        run: git worktree remove ../domain-main --force
 
       - name: Post test summary comment
         if: always() && github.event_name == 'pull_request'

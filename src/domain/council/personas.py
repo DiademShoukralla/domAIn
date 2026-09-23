@@ -1,7 +1,10 @@
+from uuid import UUID
+
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from domain.council.status import StatusQueue, emit_persona_status
 from domain.llm.factory import get_persona_model
 from domain.retrieval.service import retrieve
 from domain.schemas.common import ActorContext, Citation, PersonaOpinion, ReviewRequest, Verdict
@@ -68,10 +71,16 @@ async def run_persona(
     request: ReviewRequest,
     actor: ActorContext,
     db: AsyncSession,
+    *,
+    session_id: UUID,
+    status_queue: StatusQueue | None = None,
 ) -> PersonaOpinion:
     if persona not in PERSONA_SYSTEM_PROMPTS:
         raise ValueError(f"Unknown persona: {persona}")
 
+    await emit_persona_status(status_queue, session_id, persona, "pondering")
+
+    await emit_persona_status(status_queue, session_id, persona, "researching")
     retrieval = await retrieve(
         session=db,
         query=request.query,
@@ -81,6 +90,7 @@ async def run_persona(
     context = _build_context(retrieval.chunks) if retrieval.chunks else "No indexed knowledge found."
     citations = _build_citations(retrieval.chunks)
 
+    await emit_persona_status(status_queue, session_id, persona, "giving_recommendation")
     model = get_persona_model().with_structured_output(PersonaOpinionOutput)
     output = await model.ainvoke(
         [
@@ -97,6 +107,7 @@ async def run_persona(
     if not isinstance(output, PersonaOpinionOutput):
         output = PersonaOpinionOutput.model_validate(output)
 
+    await emit_persona_status(status_queue, session_id, persona, "recommendation_ready")
     return PersonaOpinion(
         persona=persona,
         verdict=output.verdict,

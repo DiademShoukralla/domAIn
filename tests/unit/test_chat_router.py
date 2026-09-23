@@ -3,6 +3,8 @@ from uuid import uuid4
 
 import pytest
 
+import asyncio
+
 from domain.chat.router import route_message
 from domain.schemas.chat import ChatIntent, ResponseKind
 from domain.schemas.common import ActorContext
@@ -47,6 +49,32 @@ async def test_route_strategic_session_runs_council() -> None:
     council_mock.assert_awaited_once()
     assert response.classified_intent == ChatIntent.STRATEGIC_SESSION
     assert response.response_kind == ResponseKind.COUNCIL_RESULT
+
+
+@pytest.mark.asyncio
+async def test_route_strategic_session_emits_alerting_council() -> None:
+    actor = ActorContext(user_id=uuid4())
+    session_id = uuid4()
+    queue: asyncio.Queue = asyncio.Queue()
+
+    with patch("domain.chat.router.run_council", new_callable=AsyncMock) as council_mock:
+        council_mock.return_value.response_kind = ResponseKind.COUNCIL_RESULT
+        council_mock.return_value.classified_intent = ChatIntent.STRATEGIC_SESSION
+
+        await route_message(
+            session_id=session_id,
+            message="Review this proposal",
+            actor=actor,
+            db=AsyncMock(),
+            intent=ChatIntent.STRATEGIC_SESSION,
+            status_queue=queue,
+        )
+
+    update = await queue.get()
+    assert update.scope == "supervisor"
+    assert update.status == "alerting_council"
+    assert update.session_id == session_id
+    assert queue.empty()
 
 
 @pytest.mark.asyncio

@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import StrEnum
+from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -49,6 +50,13 @@ class ChatResponse(BaseModel):
     response_kind: ResponseKind
     citations: list[Citation] = Field(default_factory=list)
     council_decision: CouncilDecision | None = None
+
+
+class ChatStatusUpdate(BaseModel):
+    session_id: UUID
+    scope: Literal["supervisor", "persona"]
+    persona: str | None = None
+    status: str
 
 
 class ChatHistoryResponse(BaseModel):

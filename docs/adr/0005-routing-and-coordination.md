@@ -199,6 +199,74 @@ A completed council response sets `response_kind=council_result` and populates `
 
 **Note:** Live status updates during council execution (persona-by-persona progress) are Pass 3b; Pass 3a returns only the final completed frame.
 
+## Council streaming status protocol (Pass 3b)
+
+Date: 2026-09-23
+
+Pass 3b adds real-time progress visibility for the council path. The three personas run in parallel with independent lifecycles; a single opaque "working" indicator would hide that. Status frames are backend-emitted and reflect real pipeline state as it happens.
+
+### Frontend-only optimistic state
+
+**"Understanding the message"** is shown instantly on send with no backend signal. It is purely frontend-optimistic. All states below are backend-emitted.
+
+### Wire frame: `ChatStatusUpdate`
+
+Zero or more `ChatStatusUpdate` frames precede the final `ChatResponse` that ends the turn. The final `ChatResponse` shape from Pass 3a is unchanged.
+
+```python
+class ChatStatusUpdate(BaseModel):
+    session_id: UUID
+    scope: Literal["supervisor", "persona"]
+    persona: str | None = None  # one of PERSONA_IDS; set only when scope == "persona"
+    status: str
+```
+
+`PERSONA_IDS` are `"ux"`, `"dev_experience"`, and `"business"` (see `domain.council.personas`).
+
+### Status taxonomy
+
+**Supervisor-level** (emitted in pipeline order):
+
+| Status | When emitted |
+|--------|--------------|
+| `alerting_council` | Right after classification lands as `strategic_session` |
+| `waiting_on_council` | Personas dispatched, in flight |
+| `council_deliberating` | Start of `chair_node` (runs only after all three persona branches join) |
+
+**Per-persona** (emitted independently per persona inside `run_persona`; arrive out of order relative to each other):
+
+| Status | When emitted |
+|--------|--------------|
+| `pondering` | Persona worker starts |
+| `researching` | During the persona's `retrieve()` call |
+| `giving_recommendation` | During the persona's `model.ainvoke()` call |
+| `recommendation_ready` | Persona opinion complete |
+
+v1's `researching` maps only to the shared retrieval call. Internet querying and Linear querying are documented future add-ons — not built in Pass 3b.
+
+### Single-writer queue transport
+
+**No persona or chair node may call `websocket.send_text()` directly.** Pass 3a learned that sharing one `AsyncSession` across concurrently-dispatched persona coroutines (LangGraph `Send` API) breaks; each persona now gets its own session. This pass applies the same lesson to the WebSocket: concurrent producers push onto an `asyncio.Queue`; only the WebSocket handler in `chat.py` drains the queue and calls `send_text`.
+
+Flow per message:
+
+1. Handler creates `asyncio.Queue[ChatStatusUpdate | None]`.
+2. Handler kicks off `process_message` (which may call `run_council`) as a background task.
+3. Handler concurrently drains the queue, forwarding each item as a `ChatStatusUpdate` JSON frame.
+4. When the pipeline completes, `process_message` enqueues a sentinel; the drain loop exits.
+5. Handler sends the final `ChatResponse`.
+
+Status-emitting call sites (`route_message`, `run_council`, `run_persona`, `chair_node`) receive the queue by parameter and never hold a WebSocket reference.
+
+### Updated WebSocket server → client sequence
+
+For a `strategic_session`:
+
+1. Zero or more `ChatStatusUpdate` frames (`alerting_council` → `waiting_on_council` → per-persona updates in parallel → `council_deliberating`).
+2. One final `ChatResponse` with `response_kind=council_result`.
+
+Non-council paths send only the final `ChatResponse` (no status frames).
+
 ## Consequences
 
 - Unified chat UX with no mode selector simplifies the frontend and matches user mental models ("I ask domAIn a question").
@@ -209,3 +277,4 @@ A completed council response sets `response_kind=council_result` and populates `
 - The router eval dataset is a Phase 1 deliverable; persona output eval is explicitly Phase 2.
 - Chat wire contract (`ChatMessageIn`, `ChatResponse`, `response_kind` voice mapping) is documented in the dated sections above.
 - Pass 3a council results expose structured `CouncilDecision` on the wire; frontend renders `PersonaMessage` and `ChairBlock` per design system.
+- Pass 3b streams `ChatStatusUpdate` frames before the final `ChatResponse` for council sessions; concurrent producers use a single-writer queue so persona nodes never touch the WebSocket directly.

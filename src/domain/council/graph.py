@@ -1,5 +1,6 @@
 import operator
-from typing import Annotated, Any, TypedDict
+from typing import Annotated, Any, NotRequired, TypedDict
+from uuid import UUID
 
 from langgraph.graph import END, START, StateGraph
 from langgraph.graph.state import CompiledStateGraph
@@ -7,6 +8,7 @@ from langgraph.types import Send
 
 from domain.council.chair import synthesize_decision
 from domain.council.personas import PERSONA_IDS, run_persona
+from domain.council.status import StatusQueue, emit_supervisor_status
 from domain.db.session import async_session_factory
 from domain.schemas.common import ActorContext, CouncilDecision, PersonaOpinion, ReviewRequest
 
@@ -14,6 +16,8 @@ from domain.schemas.common import ActorContext, CouncilDecision, PersonaOpinion,
 class CouncilState(TypedDict):
     request: ReviewRequest
     actor: ActorContext
+    session_id: UUID
+    status_queue: NotRequired[StatusQueue | None]
     persona_opinions: Annotated[list[PersonaOpinion], operator.add]
     decision: CouncilDecision | None
 
@@ -21,6 +25,8 @@ class CouncilState(TypedDict):
 class PersonaWorkerState(TypedDict):
     request: ReviewRequest
     actor: ActorContext
+    session_id: UUID
+    status_queue: NotRequired[StatusQueue | None]
     persona: str
 
 
@@ -31,6 +37,8 @@ def dispatch_personas(state: CouncilState) -> list[Send]:
             {
                 "request": state["request"],
                 "actor": state["actor"],
+                "session_id": state["session_id"],
+                "status_queue": state.get("status_queue"),
                 "persona": persona,
             },
         )
@@ -45,11 +53,18 @@ async def persona_node(state: PersonaWorkerState) -> dict[str, list[PersonaOpini
             request=state["request"],
             actor=state["actor"],
             db=db,
+            session_id=state["session_id"],
+            status_queue=state.get("status_queue"),
         )
     return {"persona_opinions": [opinion]}
 
 
 async def chair_node(state: CouncilState) -> dict[str, CouncilDecision]:
+    await emit_supervisor_status(
+        state.get("status_queue"),
+        state["session_id"],
+        "council_deliberating",
+    )
     decision = await synthesize_decision(state["persona_opinions"])
     return {"decision": decision}
 

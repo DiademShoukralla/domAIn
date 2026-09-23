@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from uuid import UUID
@@ -8,8 +9,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from domain.auth.api_key import validate_api_key
 from domain.auth.middleware import get_actor
 from domain.chat.service import get_session_messages, process_message
+from domain.council.status import STATUS_QUEUE_SENTINEL, StatusQueue
 from domain.db.session import async_session_factory, get_db
-from domain.schemas.chat import ChatHistoryResponse, ChatMessageIn
+from domain.schemas.chat import ChatHistoryResponse, ChatMessageIn, ChatResponse, ChatStatusUpdate
 from domain.schemas.common import ActorContext
 
 logger = logging.getLogger(__name__)
@@ -46,15 +48,26 @@ async def chat_websocket(
             raw = await websocket.receive_text()
             payload = json.loads(raw)
             message = ChatMessageIn.model_validate(payload)
+            status_queue: StatusQueue = asyncio.Queue()
 
-            async with async_session_factory() as session:
-                response = await process_message(
-                    db=session,
-                    session_id=message.session_id,
-                    content=message.content,
-                    actor=actor,
-                )
+            async def run_message_pipeline() -> ChatResponse:
+                async with async_session_factory() as session:
+                    return await process_message(
+                        db=session,
+                        session_id=message.session_id,
+                        content=message.content,
+                        actor=actor,
+                        status_queue=status_queue,
+                    )
 
+            pipeline_task = asyncio.create_task(run_message_pipeline())
+            while True:
+                update = await status_queue.get()
+                if update is STATUS_QUEUE_SENTINEL:
+                    break
+                await websocket.send_text(update.model_dump_json())
+
+            response = await pipeline_task
             await websocket.send_text(response.model_dump_json())
     except WebSocketDisconnect:
         return

@@ -3,6 +3,7 @@ from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.council.graph import council_graph
+from domain.council.status import StatusQueue, emit_supervisor_status
 from domain.schemas.chat import ChatIntent, ChatResponse, ResponseKind
 from domain.schemas.common import ActorContext, ReviewRequest
 
@@ -12,12 +13,17 @@ async def run_council(
     message: str,
     actor: ActorContext,
     db: AsyncSession,
+    *,
+    status_queue: StatusQueue | None = None,
 ) -> ChatResponse:
     request = ReviewRequest(query=message, project_id=actor.project_id)
+    await emit_supervisor_status(status_queue, session_id, "waiting_on_council")
     result = await council_graph.ainvoke(
         {
             "request": request,
             "actor": actor,
+            "session_id": session_id,
+            "status_queue": status_queue,
             "persona_opinions": [],
             "decision": None,
         }

@@ -81,6 +81,7 @@ Pass the string value as sentence case in markup (`approve`, `request changes`, 
 | SourceListItem | [components/source-list-item.md](components/source-list-item.md) | One row in the knowledge-source rail. Four status states. |
 | PersonaMessage | [components/persona-message.md](components/persona-message.md) | A council member's opinion bubble. |
 | ChairBlock | [components/chair-block.md](components/chair-block.md) | Synthesis and overall verdict. |
+| WriteBackCard | [components/WriteBackCard/README.md](components/WriteBackCard/README.md) | Propose, refine, and confirm council write-back from the chair footer. |
 | VerdictBadge | [components/verdict-badge.md](components/verdict-badge.md) | Inline verdict chip. |
 | StatusChip | [components/status-chip.md](components/status-chip.md) | Source lifecycle indicator. |
 | CodeCitation | [components/code-citation.md](components/code-citation.md) | Evidence snippet with line numbers, syntax tokens, hit row. |

@@ -47,6 +47,12 @@ export interface WriteBackFeedbackEntry {
   created_at: string;
 }
 
+export interface WriteBackExecutionResult {
+  kind: "github_pr" | "linear_issue";
+  label: string;
+  url: string;
+}
+
 export interface WriteBackProposalOut {
   id: string;
   chat_message_id: string;
@@ -55,6 +61,7 @@ export interface WriteBackProposalOut {
   plan: WriteBackPlan;
   feedback_history: WriteBackFeedbackEntry[];
   status: WriteBackProposalStatus;
+  execution_results: WriteBackExecutionResult[];
   created_at: string;
   updated_at: string;
   executed_at: string | null;
@@ -66,6 +73,7 @@ export interface ChatMessageIn {
 }
 
 export interface ChatResponse {
+  id: string;
   session_id: string;
   content: string;
   classified_intent: ChatIntent;
@@ -152,6 +160,7 @@ export type ThreadItem =
       phase: "complete";
       content: string;
       councilDecision: CouncilDecision;
+      writeBackProposal: WriteBackProposalOut | null;
     };
 
 export type IncomingFrame = ChatResponse | ChatStatusUpdate;

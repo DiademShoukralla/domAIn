@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.llm.factory import get_retrieval_answer_model
 from domain.retrieval.service import retrieve
-from domain.schemas.chat import ChatIntent, ChatResponse, ResponseKind
+from domain.schemas.chat import ChatIntent, ResponseKind, RoutedChatResponse
 from domain.schemas.common import ActorContext, Citation
 from domain.schemas.retrieval import RetrievedChunk
 
@@ -46,7 +46,7 @@ async def handle_simple_retrieval(
     message: str,
     actor: ActorContext,
     db: AsyncSession,
-) -> ChatResponse:
+) -> RoutedChatResponse:
     retrieval = await retrieve(
         session=db,
         query=message,
@@ -59,7 +59,7 @@ async def handle_simple_retrieval(
             "I could not find indexed knowledge that answers that question yet. "
             "Try connecting a source or rephrasing the query."
         )
-        return ChatResponse(
+        return RoutedChatResponse(
             session_id=session_id,
             content=content,
             classified_intent=ChatIntent.SIMPLE_RETRIEVAL,
@@ -79,7 +79,7 @@ async def handle_simple_retrieval(
     content = answer.content if isinstance(answer.content, str) else str(answer.content)
     citations = _build_citations(retrieval.chunks)
 
-    return ChatResponse(
+    return RoutedChatResponse(
         session_id=session_id,
         content=content,
         classified_intent=ChatIntent.SIMPLE_RETRIEVAL,

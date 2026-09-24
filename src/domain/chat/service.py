@@ -111,7 +111,7 @@ async def process_message(
         if status_queue is not None:
             await status_queue.put(STATUS_QUEUE_SENTINEL)
 
-    await _persist_message(
+    assistant_record = await _persist_message(
         db,
         session_id=session_id,
         actor=actor,
@@ -122,7 +122,7 @@ async def process_message(
         citations=response.citations,
         council_decision=response.council_decision,
     )
-    return response
+    return ChatResponse(id=assistant_record.id, **response.model_dump())
 
 
 async def get_session_messages(

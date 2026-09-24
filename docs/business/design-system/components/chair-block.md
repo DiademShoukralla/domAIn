@@ -13,6 +13,9 @@ The synthesis block. States a recommendation and the reason for it in one paragr
   <div class="body-lg">
     The council recommends commenting rather than blocking: chunking can remain simple for v1 while the ADR documents a migration path to semantic splitting if retrieval quality degrades on code files.
   </div>
+  <footer class="dom-chair-block__footer">
+    <!-- WriteBackCard lives here on completed council results -->
+  </footer>
 </article>
 ```
 

@@ -59,7 +59,7 @@ async def test_websocket_disconnect_cleans_up_pipeline_db_session(db_session) ->
         *,
         status_queue: asyncio.Queue | None = None,
     ):
-        from domain.schemas.chat import ChatIntent, ChatResponse
+        from domain.schemas.chat import ChatIntent, RoutedChatResponse
 
         if status_queue is not None:
             await status_queue.put(
@@ -77,7 +77,7 @@ async def test_websocket_disconnect_cleans_up_pipeline_db_session(db_session) ->
                 )
             )
         await asyncio.Event().wait()
-        return ChatResponse(
+        return RoutedChatResponse(
             session_id=council_session_id,
             content="unused",
             classified_intent=ChatIntent.STRATEGIC_SESSION,

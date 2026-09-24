@@ -6,9 +6,11 @@ import type {
   CouncilDecision,
   CouncilPendingState,
   PersonaOpinion,
+  WriteBackProposalOut,
 } from "../types/chat";
 import { CodeCitation } from "./CodeCitation";
 import { VerdictBadge } from "./VerdictBadge";
+import { WriteBackCard } from "./WriteBackCard";
 
 interface ChatMessageProps {
   voice: ChatMessageVoice;
@@ -17,6 +19,10 @@ interface ChatMessageProps {
   opinion?: PersonaOpinion;
   councilDecision?: CouncilDecision;
   pending?: CouncilPendingState;
+  messageId?: string;
+  apiKey?: string;
+  writeBackProposal?: WriteBackProposalOut | null;
+  onWriteBackProposalUpdate?: (proposal: WriteBackProposalOut) => void;
 }
 
 function PersonaHeader({
@@ -92,6 +98,10 @@ export function ChatMessage({
   opinion,
   councilDecision,
   pending,
+  messageId,
+  apiKey,
+  writeBackProposal = null,
+  onWriteBackProposalUpdate,
 }: ChatMessageProps) {
   if (voice === "you") {
     return (
@@ -129,6 +139,8 @@ export function ChatMessage({
   }
 
   if (voice === "chair" && councilDecision) {
+    const showWriteBack = Boolean(messageId && apiKey && onWriteBackProposalUpdate);
+
     return (
       <article className="dom-chair-block">
         <header className="dom-chair-block__header">
@@ -136,6 +148,16 @@ export function ChatMessage({
           <VerdictBadge verdict={councilDecision.overall_verdict} />
         </header>
         <div className="body-lg">{councilDecision.synthesis || content}</div>
+        {showWriteBack ? (
+          <footer className="dom-chair-block__footer">
+            <WriteBackCard
+              messageId={messageId!}
+              apiKey={apiKey!}
+              proposal={writeBackProposal ?? null}
+              onProposalUpdate={onWriteBackProposalUpdate!}
+            />
+          </footer>
+        ) : null}
       </article>
     );
   }

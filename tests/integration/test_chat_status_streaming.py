@@ -51,7 +51,7 @@ async def test_websocket_streams_status_frames_before_final_response(db_session)
         *,
         status_queue: asyncio.Queue | None = None,
     ):
-        from domain.schemas.chat import ChatIntent, ChatResponse, ResponseKind
+        from domain.schemas.chat import ChatIntent, ResponseKind, RoutedChatResponse
 
         if status_queue is not None:
             from domain.schemas.chat import ChatStatusUpdate
@@ -78,7 +78,7 @@ async def test_websocket_streams_status_frames_before_final_response(db_session)
                     status="council_deliberating",
                 )
             )
-        return ChatResponse(
+        return RoutedChatResponse(
             session_id=session_id,
             content=decision.synthesis,
             classified_intent=ChatIntent.STRATEGIC_SESSION,

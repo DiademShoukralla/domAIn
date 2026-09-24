@@ -13,7 +13,7 @@ import {
 } from "../lib/councilState";
 import { getOrCreateSessionId } from "../lib/session";
 import { appPath } from "../lib/routing";
-import type { IncomingFrame, ThreadItem } from "../types/chat";
+import type { IncomingFrame, ThreadItem, WriteBackProposalOut } from "../types/chat";
 import { isChatResponse, isChatStatusUpdate } from "../types/chat";
 import { useChatWebSocket } from "../hooks/useChatWebSocket";
 import { ChatThread } from "./ChatThread";
@@ -50,6 +50,20 @@ export function ChatApp({ apiKey }: { apiKey: string }) {
       setHistoryLoaded(true);
     });
   }, [apiKey, loadHistory, refreshSourceCount]);
+
+  const handleWriteBackProposalUpdate = useCallback(
+    (messageId: string, proposal: WriteBackProposalOut) => {
+      setItems((current) =>
+        current.map((item) => {
+          if (item.kind === "council" && item.phase === "complete" && item.id === messageId) {
+            return { ...item, writeBackProposal: proposal };
+          }
+          return item;
+        }),
+      );
+    },
+    [],
+  );
 
   const handleIncomingStatus = useCallback(
     (frame: IncomingFrame) => {
@@ -119,13 +133,13 @@ export function ChatApp({ apiKey }: { apiKey: string }) {
         setItems((current) =>
           current.flatMap((item) => {
             if (item.id === councilId) {
-              return [councilItemFromResponse(response, councilId)];
+              return [councilItemFromResponse(response)];
             }
             return [item];
           }),
         );
       } else if (isChatResponse(response)) {
-        const directItem = directItemFromResponse(response, crypto.randomUUID());
+        const directItem = directItemFromResponse(response);
         setItems((current) => [
           ...current.filter((item) => item.id !== councilId),
           directItem,
@@ -162,7 +176,15 @@ export function ChatApp({ apiKey }: { apiKey: string }) {
       </header>
 
       <section className="dom-chat layout-thread" aria-live="polite">
-        {!historyLoaded ? <p className="caption">Loading chat history</p> : <ChatThread items={items} />}
+        {!historyLoaded ? (
+          <p className="caption">Loading chat history</p>
+        ) : (
+          <ChatThread
+            items={items}
+            apiKey={apiKey}
+            onWriteBackProposalUpdate={handleWriteBackProposalUpdate}
+          />
+        )}
       </section>
 
       {error ? <p className="dom-error layout-thread caption">{error}</p> : null}

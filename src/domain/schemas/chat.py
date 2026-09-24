@@ -46,13 +46,17 @@ class ChatMessageOut(BaseModel):
     created_at: datetime
 
 
-class ChatResponse(BaseModel):
+class RoutedChatResponse(BaseModel):
     session_id: UUID
     content: str
     classified_intent: ChatIntent
     response_kind: ResponseKind
     citations: list[Citation] = Field(default_factory=list)
     council_decision: CouncilDecision | None = None
+
+
+class ChatResponse(RoutedChatResponse):
+    id: UUID
 
 
 class ChatStatusUpdate(BaseModel):

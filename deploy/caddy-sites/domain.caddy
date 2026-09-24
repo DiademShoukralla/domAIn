@@ -2,7 +2,30 @@ domain.didi.build {
 	handle /app/* {
 		respond "Frontend not yet deployed" 503
 	}
-	handle {
+
+	handle /health* {
 		reverse_proxy domain-api:8080
+	}
+	handle /oauth* {
+		reverse_proxy domain-api:8080
+	}
+	handle /connections* {
+		reverse_proxy domain-api:8080
+	}
+	handle /sources* {
+		reverse_proxy domain-api:8080
+	}
+	handle /retrieval* {
+		reverse_proxy domain-api:8080
+	}
+	handle /chat* {
+		reverse_proxy domain-api:8080
+	}
+	handle /write-back-proposals* {
+		reverse_proxy domain-api:8080
+	}
+
+	handle {
+		reverse_proxy domain-landing:80
 	}
 }

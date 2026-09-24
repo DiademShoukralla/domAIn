@@ -104,6 +104,19 @@ async def test_create_and_refine_write_back_proposal(db_session) -> None:
             )
             assert duplicate_response.status_code == 409
 
+            history_response = await client.get(
+                f"/chat/sessions/{message.session_id}/messages",
+                headers={"X-API-Key": settings.bootstrap_api_key},
+            )
+            assert history_response.status_code == 200
+            history = history_response.json()
+            assert len(history["messages"]) == 1
+            proposal = history["messages"][0]["write_back_proposal"]
+            assert proposal is not None
+            assert proposal["id"] == created["id"]
+            assert proposal["status"] == "proposed"
+            assert proposal["plan"]["new_doc_slug"] == "council-scope-refined"
+
 
 @pytest.mark.asyncio
 async def test_write_back_requires_council_result(db_session) -> None:

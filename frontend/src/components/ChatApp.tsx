@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   fetchChatHistory,
   fetchSourceCount,
@@ -32,7 +32,7 @@ export function ChatApp() {
   const [error, setError] = useState<string | null>(null);
   const [historyLoaded, setHistoryLoaded] = useState(false);
 
-  const activeCouncilIdRef = useMemo(() => ({ current: null as string | null }), []);
+  const activeCouncilIdRef = useRef<string | null>(null);
 
   const refreshSourceCount = useCallback(async (key: string) => {
     try {

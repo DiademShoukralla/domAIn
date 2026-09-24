@@ -15,7 +15,7 @@ from domain.schemas.chat import (
     ResponseKind,
 )
 from domain.schemas.common import ActorContext, Citation, CouncilDecision
-from domain.writeback.service import _to_proposal_out
+from domain.writeback.service import to_proposal_out
 
 
 def _citation_payload(citations: list[Citation]) -> list[dict[str, object]]:
@@ -61,7 +61,7 @@ def _to_message_out(
         if record.council_decision is not None
         else None
     )
-    write_back_proposal = _to_proposal_out(proposal) if proposal is not None else None
+    write_back_proposal = to_proposal_out(proposal) if proposal is not None else None
     return ChatMessageOut(
         id=record.id,
         session_id=record.session_id,

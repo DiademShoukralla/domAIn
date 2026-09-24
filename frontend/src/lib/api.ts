@@ -1,9 +1,9 @@
 import type {
   ChatHistoryResponse,
   ChatMessageOut,
-  KnowledgeSourceListResponse,
   ThreadItem,
 } from "../types/chat";
+import type { KnowledgeSource, KnowledgeSourceListResponse } from "../types/sources";
 
 function apiHeaders(apiKey: string): HeadersInit {
   return {
@@ -31,11 +31,34 @@ export async function fetchChatHistory(
 }
 
 export async function fetchSourceCount(apiKey: string): Promise<number> {
+  const payload = await fetchSources(apiKey);
+  return payload.sources.filter((source) => source.status === "ready").length;
+}
+
+export async function fetchSources(apiKey: string): Promise<KnowledgeSourceListResponse> {
   const response = await fetch("/sources", {
     headers: apiHeaders(apiKey),
   });
-  const payload = await parseJson<KnowledgeSourceListResponse>(response);
-  return payload.sources.filter((source) => source.status === "ready").length;
+  return parseJson<KnowledgeSourceListResponse>(response);
+}
+
+export async function deleteSource(apiKey: string, sourceId: string): Promise<void> {
+  const response = await fetch(`/sources/${sourceId}`, {
+    method: "DELETE",
+    headers: apiHeaders(apiKey),
+  });
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(detail || `Request failed with status ${response.status}`);
+  }
+}
+
+export async function refreshSource(apiKey: string, sourceId: string): Promise<KnowledgeSource> {
+  const response = await fetch(`/sources/${sourceId}/refresh`, {
+    method: "POST",
+    headers: apiHeaders(apiKey),
+  });
+  return parseJson<KnowledgeSource>(response);
 }
 
 export function historyToThreadItems(messages: ChatMessageOut[]): ThreadItem[] {

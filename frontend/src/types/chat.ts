@@ -99,14 +99,7 @@ export interface ChatHistoryResponse {
   messages: ChatMessageOut[];
 }
 
-export interface KnowledgeSource {
-  id: string;
-  status: "pending" | "indexing" | "ready" | "error";
-}
-
-export interface KnowledgeSourceListResponse {
-  sources: KnowledgeSource[];
-}
+export type { KnowledgeSource, KnowledgeSourceListResponse } from "./sources";
 
 export type ChatMessageVoice =
   | "you"

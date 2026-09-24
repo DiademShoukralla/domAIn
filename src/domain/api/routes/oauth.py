@@ -50,7 +50,7 @@ async def github_callback(
     installation = await fetch_installation(installation_id)
     await upsert_github_connection(db, user_id, installation_id, installation)
     return RedirectResponse(
-        url=f"{get_settings().app_base_url}/connections?provider=github&status=connected"
+        url=f"{get_settings().app_base_url}/app/connections?provider=github&status=connected"
     )
 
 
@@ -78,5 +78,5 @@ async def linear_callback(
     user_info = await linear_fetch_user(token["access_token"])
     await upsert_linear_connection(db, user_id, token, user_info)
     return RedirectResponse(
-        url=f"{get_settings().app_base_url}/connections?provider=linear&status=connected"
+        url=f"{get_settings().app_base_url}/app/connections?provider=linear&status=connected"
     )

@@ -6,6 +6,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 
 from domain.schemas.common import Citation, CouncilDecision
+from domain.schemas.writeback import WriteBackProposalOut
 
 
 class ChatIntent(StrEnum):
@@ -41,6 +42,7 @@ class ChatMessageOut(BaseModel):
     response_kind: ResponseKind | None = None
     citations: list[Citation] = Field(default_factory=list)
     council_decision: CouncilDecision | None = None
+    write_back_proposal: WriteBackProposalOut | None = None
     created_at: datetime
 
 

@@ -55,6 +55,8 @@ async def test_chat_history_persists_messages(db_session) -> None:
             assert len(payload["messages"]) == 2
             assert payload["messages"][0]["role"] == "user"
             assert payload["messages"][1]["role"] == "assistant"
+            assert payload["messages"][0]["write_back_proposal"] is None
+            assert payload["messages"][1]["write_back_proposal"] is None
 
 
 def test_websocket_rejects_missing_api_key() -> None:

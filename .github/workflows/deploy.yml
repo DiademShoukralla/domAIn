@@ -21,14 +21,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push image
+      - name: Build and push images
         env:
           GHCR_OWNER: ${{ github.repository_owner }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          IMAGE="ghcr.io/$(echo "$GHCR_OWNER" | tr '[:upper:]' '[:lower:]')/domain:${IMAGE_TAG}"
-          docker build -t "$IMAGE" .
-          docker push "$IMAGE"
+          OWNER="$(echo "$GHCR_OWNER" | tr '[:upper:]' '[:lower:]')"
+          API_IMAGE="ghcr.io/${OWNER}/domain:${IMAGE_TAG}"
+          LANDING_IMAGE="ghcr.io/${OWNER}/domain-landing:${IMAGE_TAG}"
+          docker build -t "$API_IMAGE" .
+          docker build -t "$LANDING_IMAGE" -f deploy/landing/Dockerfile deploy/landing
+          docker push "$API_IMAGE"
+          docker push "$LANDING_IMAGE"
 
       - name: Deploy to droplet
         uses: appleboy/ssh-action@v1.2.0

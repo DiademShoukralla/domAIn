@@ -51,6 +51,24 @@ services:
         max-size: "10m"
         max-file: "3"
 
+  domain-landing:
+    image: ghcr.io/${GHCR_OWNER}/domain-landing:${IMAGE_TAG}
+    container_name: domain-landing
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost/ >/dev/null 2>&1 || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 5s
+    networks:
+      - public-ingress
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 networks:
   public-ingress:
     external: true

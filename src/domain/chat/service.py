@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from domain.chat.classifier import classify_intent
 from domain.chat.router import route_message
 from domain.council.status import STATUS_QUEUE_SENTINEL, StatusQueue
-from domain.db.models import ChatMessage
+from domain.db.models import ChatMessage, WriteBackProposal
 from domain.schemas.chat import (
     ChatIntent,
     ChatMessageOut,
@@ -15,6 +15,7 @@ from domain.schemas.chat import (
     ResponseKind,
 )
 from domain.schemas.common import ActorContext, Citation, CouncilDecision
+from domain.writeback.service import _to_proposal_out
 
 
 def _citation_payload(citations: list[Citation]) -> list[dict[str, object]]:
@@ -50,13 +51,17 @@ async def _persist_message(
     return record
 
 
-def _to_message_out(record: ChatMessage) -> ChatMessageOut:
+def _to_message_out(
+    record: ChatMessage,
+    proposal: WriteBackProposal | None = None,
+) -> ChatMessageOut:
     citations = [Citation.model_validate(item) for item in record.citations]
     council_decision = (
         CouncilDecision.model_validate(record.council_decision)
         if record.council_decision is not None
         else None
     )
+    write_back_proposal = _to_proposal_out(proposal) if proposal is not None else None
     return ChatMessageOut(
         id=record.id,
         session_id=record.session_id,
@@ -68,6 +73,7 @@ def _to_message_out(record: ChatMessage) -> ChatMessageOut:
         response_kind=ResponseKind(record.response_kind) if record.response_kind else None,
         citations=citations,
         council_decision=council_decision,
+        write_back_proposal=write_back_proposal,
         created_at=record.created_at,
     )
 
@@ -133,4 +139,15 @@ async def get_session_messages(
         .order_by(ChatMessage.created_at.asc())
     )
     records = result.scalars().all()
-    return [_to_message_out(record) for record in records]
+    if not records:
+        return []
+
+    message_ids = [record.id for record in records]
+    proposals_result = await db.execute(
+        select(WriteBackProposal).where(WriteBackProposal.chat_message_id.in_(message_ids))
+    )
+    proposals_by_message_id = {
+        proposal.chat_message_id: proposal for proposal in proposals_result.scalars().all()
+    }
+
+    return [_to_message_out(record, proposals_by_message_id.get(record.id)) for record in records]

@@ -11,21 +11,16 @@ import {
   directItemFromResponse,
   OPTIMISTIC_STATUS,
 } from "../lib/councilState";
-import {
-  getOrCreateSessionId,
-  getStoredApiKey,
-  setStoredApiKey,
-} from "../lib/session";
+import { getOrCreateSessionId } from "../lib/session";
+import { appPath } from "../lib/routing";
 import type { IncomingFrame, ThreadItem } from "../types/chat";
 import { isChatResponse, isChatStatusUpdate } from "../types/chat";
 import { useChatWebSocket } from "../hooks/useChatWebSocket";
 import { ChatThread } from "./ChatThread";
 import { Composer } from "./ChatMessage";
 
-export function ChatApp() {
+export function ChatApp({ apiKey }: { apiKey: string }) {
   const [sessionId] = useState(getOrCreateSessionId);
-  const [apiKey, setApiKey] = useState(getStoredApiKey);
-  const [apiKeyDraft, setApiKeyDraft] = useState(getStoredApiKey);
   const [items, setItems] = useState<ThreadItem[]>([]);
   const [readySourceCount, setReadySourceCount] = useState<number | null>(null);
   const [awaitingResponse, setAwaitingResponse] = useState(false);
@@ -50,10 +45,6 @@ export function ChatApp() {
   }, [sessionId]);
 
   useEffect(() => {
-    if (!apiKey) {
-      setHistoryLoaded(false);
-      return;
-    }
     void Promise.all([loadHistory(apiKey), refreshSourceCount(apiKey)]).catch((loadError) => {
       setError(loadError instanceof Error ? loadError.message : "Failed to load chat history.");
       setHistoryLoaded(true);
@@ -91,20 +82,8 @@ export function ChatApp() {
     onError: setError,
   });
 
-  const handleSaveApiKey = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const trimmed = apiKeyDraft.trim();
-    if (!trimmed) {
-      setError("Enter an API key to connect.");
-      return;
-    }
-    setStoredApiKey(trimmed);
-    setApiKey(trimmed);
-    setError(null);
-  };
-
   const handleSend = async (content: string) => {
-    if (!apiKey || awaitingResponse) {
+    if (awaitingResponse) {
       return;
     }
 
@@ -162,42 +141,24 @@ export function ChatApp() {
     }
   };
 
-  if (!apiKey) {
-    return (
-      <main className="dom-app">
-        <section className="dom-setup layout-thread">
-          <h1 className="dom-setup__title">Connect to domAIn</h1>
-          <p className="body">Enter your API key to open the chat session.</p>
-          <form className="dom-setup__form" onSubmit={handleSaveApiKey}>
-            <label className="label" htmlFor="api-key">
-              API key
-            </label>
-            <input
-              id="api-key"
-              className="dom-setup__input"
-              type="password"
-              autoComplete="off"
-              value={apiKeyDraft}
-              onChange={(event) => setApiKeyDraft(event.target.value)}
-            />
-            <button type="submit" className="dom-btn dom-btn--primary">
-              Connect
-            </button>
-          </form>
-          {error ? <p className="dom-error caption">{error}</p> : null}
-        </section>
-      </main>
-    );
-  }
-
   return (
-    <main className="dom-app">
+    <>
       <header className="dom-header layout-thread">
         <div>
           <p className="overline">domAIn</p>
           <h1 className="dom-header__title">Chat</h1>
         </div>
-        <p className="caption">{connected ? "Connected" : "Connecting"}</p>
+        <div className="dom-header__aside">
+          <nav className="dom-nav" aria-label="App sections">
+            <a className="dom-nav__link dom-nav__link--active" href={appPath("chat")} aria-current="page">
+              Chat
+            </a>
+            <a className="dom-nav__link" href={appPath("connections")}>
+              Connections
+            </a>
+          </nav>
+          <p className="caption">{connected ? "Connected" : "Connecting"}</p>
+        </div>
       </header>
 
       <section className="dom-chat layout-thread" aria-live="polite">
@@ -215,6 +176,6 @@ export function ChatApp() {
           }}
         />
       </footer>
-    </main>
+    </>
   );
 }

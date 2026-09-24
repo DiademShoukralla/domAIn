@@ -246,7 +246,7 @@ Linear has no GitHub-App-style installation model, but OAuth supports an **`acto
 
 | Consumer | Usage |
 |----------|--------|
-| `domain/api/routes/oauth.py` | Post-connect redirect after GitHub App setup or Linear OAuth callback: `{app_base_url}/connections?provider=…&status=connected` |
+| `domain/api/routes/oauth.py` | Post-connect redirect after GitHub App setup or Linear OAuth callback: `{app_base_url}/app/connections?provider=…&status=connected` |
 
 It is **not** used for OAuth redirect URIs (those are separate `GITHUB_*` / `LINEAR_REDIRECT_URI` settings), Caddy configuration, or LLM/embedding calls. No code performs localhost-specific string matching on `app_base_url` — it is only interpolated as a URL prefix.
 

@@ -46,7 +46,7 @@ def _feedback_strings(proposal: WriteBackProposal) -> list[str]:
     return [str(entry["feedback"]) for entry in proposal.feedback_history]
 
 
-def _to_proposal_out(proposal: WriteBackProposal) -> WriteBackProposalOut:
+def to_proposal_out(proposal: WriteBackProposal) -> WriteBackProposalOut:
     feedback_history = [
         WriteBackFeedbackEntry.model_validate(entry) for entry in proposal.feedback_history
     ]
@@ -677,7 +677,7 @@ async def create_write_back_proposal(
     db.add(proposal)
     await db.commit()
     await db.refresh(proposal)
-    return _to_proposal_out(proposal)
+    return to_proposal_out(proposal)
 
 
 async def refine_write_back_proposal(
@@ -712,7 +712,7 @@ async def refine_write_back_proposal(
     proposal.feedback_history = updated_history
     await db.commit()
     await db.refresh(proposal)
-    return _to_proposal_out(proposal)
+    return to_proposal_out(proposal)
 
 
 async def confirm_write_back_proposal(
@@ -763,4 +763,4 @@ async def confirm_write_back_proposal(
     proposal.executed_at = executed_at
     await db.commit()
     await db.refresh(proposal)
-    return _to_proposal_out(proposal)
+    return to_proposal_out(proposal)

@@ -93,6 +93,7 @@ echo "==> Starting services..."
 IMAGE_TAG="$IMAGE_TAG" "${COMPOSE[@]}" up -d
 wait_for_healthy domain-api
 wait_for_healthy domain-landing
+wait_for_healthy domain-frontend
 
 echo "==> Publishing Caddy site..."
 install -m 0644 deploy/caddy-sites/domain.caddy "$INGRESS_SITES_DIR/domain.caddy"

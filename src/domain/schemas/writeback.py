@@ -29,6 +29,12 @@ class WriteBackProposalRefine(BaseModel):
     feedback: str = Field(min_length=1)
 
 
+class WriteBackExecutionResult(BaseModel):
+    kind: Literal["github_pr", "linear_issue"]
+    label: str
+    url: str
+
+
 class WriteBackProposalOut(BaseModel):
     id: UUID
     chat_message_id: UUID
@@ -37,6 +43,7 @@ class WriteBackProposalOut(BaseModel):
     plan: WriteBackPlan
     feedback_history: list[WriteBackFeedbackEntry] = Field(default_factory=list)
     status: WriteBackProposalStatus
+    execution_results: list[WriteBackExecutionResult] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
     executed_at: datetime | None = None

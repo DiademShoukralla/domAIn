@@ -158,6 +158,9 @@ class WriteBackProposal(Base):
         JSONB, nullable=False, default=list
     )
     status: Mapped[str] = mapped_column(String(32), nullable=False, default="proposed")
+    execution_results: Mapped[list[dict[str, object]]] = mapped_column(
+        JSONB, nullable=False, default=list
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

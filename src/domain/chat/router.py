@@ -11,7 +11,7 @@ from domain.chat.handlers import (
 )
 from domain.council import run_council
 from domain.council.status import StatusQueue, emit_supervisor_status
-from domain.schemas.chat import ChatIntent, ChatResponse
+from domain.schemas.chat import ChatIntent, RoutedChatResponse
 from domain.schemas.common import ActorContext
 
 
@@ -23,7 +23,7 @@ async def route_message(
     intent: ChatIntent | None = None,
     *,
     status_queue: StatusQueue | None = None,
-) -> ChatResponse:
+) -> RoutedChatResponse:
     resolved_intent = intent or await classify_intent(message)
 
     if resolved_intent == ChatIntent.GREETING:

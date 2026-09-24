@@ -24,6 +24,7 @@ from domain.permissions import can_access
 from domain.schemas.chat import ChatRole, ResponseKind
 from domain.schemas.common import ActorContext, CouncilDecision
 from domain.schemas.writeback import (
+    WriteBackExecutionResult,
     WriteBackFeedbackEntry,
     WriteBackPlan,
     WriteBackProposalOut,
@@ -50,6 +51,9 @@ def to_proposal_out(proposal: WriteBackProposal) -> WriteBackProposalOut:
     feedback_history = [
         WriteBackFeedbackEntry.model_validate(entry) for entry in proposal.feedback_history
     ]
+    execution_results = [
+        WriteBackExecutionResult.model_validate(entry) for entry in proposal.execution_results
+    ]
     return WriteBackProposalOut(
         id=proposal.id,
         chat_message_id=proposal.chat_message_id,
@@ -58,6 +62,7 @@ def to_proposal_out(proposal: WriteBackProposal) -> WriteBackProposalOut:
         plan=WriteBackPlan.model_validate(proposal.plan),
         feedback_history=feedback_history,
         status=WriteBackProposalStatus(proposal.status),
+        execution_results=execution_results,
         created_at=proposal.created_at,
         updated_at=proposal.updated_at,
         executed_at=proposal.executed_at,
@@ -736,9 +741,11 @@ async def confirm_write_back_proposal(
     query = await _get_original_query(db, message)
     executed_at = datetime.now(UTC)
 
+    execution_results: list[dict[str, object]] = []
+
     if plan.needs_doc_update:
         github_source, github_connection = await _resolve_github_repo_source(db, actor)
-        await _execute_github_doc_write(
+        pr_url = await _execute_github_doc_write(
             installation_id=github_connection.installation_id or "",
             repo_full_name=github_source.external_ref,
             plan=plan,
@@ -747,10 +754,23 @@ async def confirm_write_back_proposal(
             executed_at=executed_at,
             proposal_id=proposal.id,
         )
+        if plan.doc_target == "existing" and plan.existing_doc_path:
+            doc_label = f"Update {plan.existing_doc_path}"
+        elif plan.doc_target == "new" and plan.new_doc_slug:
+            doc_label = f"Add council decision doc ({plan.new_doc_slug})"
+        else:
+            doc_label = "Open documentation pull request"
+        execution_results.append(
+            WriteBackExecutionResult(
+                kind="github_pr",
+                label=doc_label,
+                url=pr_url,
+            ).model_dump(mode="json")
+        )
 
     if plan.needs_roadmap_item:
         linear_source, linear_connection = await _resolve_linear_team_source(db, actor)
-        await _execute_linear_roadmap_write(
+        issue_url = await _execute_linear_roadmap_write(
             db=db,
             connection=linear_connection,
             team_id=linear_source.external_ref,
@@ -758,7 +778,15 @@ async def confirm_write_back_proposal(
             council_decision=council_decision,
             executed_at=executed_at,
         )
+        execution_results.append(
+            WriteBackExecutionResult(
+                kind="linear_issue",
+                label="Create or update Linear roadmap item",
+                url=issue_url,
+            ).model_dump(mode="json")
+        )
 
+    proposal.execution_results = execution_results
     proposal.status = WriteBackProposalStatus.EXECUTED.value
     proposal.executed_at = executed_at
     await db.commit()

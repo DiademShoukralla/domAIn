@@ -2,6 +2,7 @@ import type {
   ChatHistoryResponse,
   ChatMessageOut,
   ThreadItem,
+  WriteBackProposalOut,
 } from "../types/chat";
 import type { KnowledgeSource, KnowledgeSourceListResponse } from "../types/sources";
 
@@ -65,6 +66,44 @@ export function historyToThreadItems(messages: ChatMessageOut[]): ThreadItem[] {
   return messages.flatMap((message) => threadItemsFromHistoryMessage(message));
 }
 
+export async function proposeWriteBack(
+  apiKey: string,
+  messageId: string,
+): Promise<WriteBackProposalOut> {
+  const response = await fetch(`/chat/messages/${messageId}/write-back`, {
+    method: "POST",
+    headers: apiHeaders(apiKey),
+  });
+  return parseJson<WriteBackProposalOut>(response);
+}
+
+export async function refineWriteBackProposal(
+  apiKey: string,
+  proposalId: string,
+  feedback: string,
+): Promise<WriteBackProposalOut> {
+  const response = await fetch(`/write-back-proposals/${proposalId}`, {
+    method: "PATCH",
+    headers: {
+      ...apiHeaders(apiKey),
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ feedback }),
+  });
+  return parseJson<WriteBackProposalOut>(response);
+}
+
+export async function confirmWriteBackProposal(
+  apiKey: string,
+  proposalId: string,
+): Promise<WriteBackProposalOut> {
+  const response = await fetch(`/write-back-proposals/${proposalId}/confirm`, {
+    method: "POST",
+    headers: apiHeaders(apiKey),
+  });
+  return parseJson<WriteBackProposalOut>(response);
+}
+
 export function threadItemsFromHistoryMessage(message: ChatMessageOut): ThreadItem[] {
   if (message.role === "user") {
     return [
@@ -84,6 +123,7 @@ export function threadItemsFromHistoryMessage(message: ChatMessageOut): ThreadIt
         phase: "complete" as const,
         content: message.content,
         councilDecision: message.council_decision,
+        writeBackProposal: message.write_back_proposal,
       },
     ];
   }

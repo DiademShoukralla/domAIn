@@ -1,9 +1,9 @@
 from uuid import UUID
 
-from domain.schemas.chat import ChatIntent, ChatResponse, ResponseKind
+from domain.schemas.chat import ChatIntent, ResponseKind, RoutedChatResponse
 
 
-async def handle_greeting(session_id: UUID, message: str) -> ChatResponse:
+async def handle_greeting(session_id: UUID, message: str) -> RoutedChatResponse:
     normalized = message.strip().lower()
     if normalized in {"hi", "hello", "hey", "howdy"}:
         content = "Hello! Ask me about the knowledge layer, or bring a strategic question for the council."
@@ -14,7 +14,7 @@ async def handle_greeting(session_id: UUID, message: str) -> ChatResponse:
             "Hi there. I can answer knowledge questions or route strategic reviews to the council."
         )
 
-    return ChatResponse(
+    return RoutedChatResponse(
         session_id=session_id,
         content=content,
         classified_intent=ChatIntent.GREETING,

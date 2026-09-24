@@ -167,6 +167,11 @@ async def test_confirm_new_doc_and_linear_executes_and_marks_executed(
     payload = response.json()
     assert payload["status"] == "executed"
     assert payload["executed_at"] is not None
+    assert len(payload["execution_results"]) == 2
+    assert payload["execution_results"][0]["kind"] == "github_pr"
+    assert payload["execution_results"][0]["url"] == "https://github.com/owner/repo/pull/1"
+    assert payload["execution_results"][1]["kind"] == "linear_issue"
+    assert payload["execution_results"][1]["url"] == "https://linear.app/issue/DIDI-1"
     github_mock.assert_awaited_once()
     linear_mock.assert_awaited_once()
 

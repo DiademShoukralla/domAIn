@@ -43,6 +43,7 @@ async def test_chat_history_persists_messages(db_session) -> None:
 
             assert response["classified_intent"] == ChatIntent.GREETING.value
             assert response["response_kind"] == ResponseKind.DIRECT_ANSWER.value
+            assert response["id"]
             retrieve_mock.assert_not_called()
             model_factory_mock.assert_not_called()
 

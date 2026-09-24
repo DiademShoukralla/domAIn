@@ -57,31 +57,32 @@ export function applyStatusUpdate(
   };
 }
 
-export function councilItemFromResponse(response: ChatResponse, id: string) {
+export function councilItemFromResponse(response: ChatResponse) {
   if (response.response_kind !== "council_result" || !response.council_decision) {
     throw new Error("Expected council_result response");
   }
 
   return {
-    id,
+    id: response.id,
     kind: "council" as const,
     phase: "complete" as const,
     content: response.content,
     councilDecision: response.council_decision,
+    writeBackProposal: null,
   };
 }
 
-export function directItemFromResponse(response: ChatResponse, id: string) {
+export function directItemFromResponse(response: ChatResponse) {
   if (response.response_kind === "stub_not_implemented") {
     return {
-      id,
+      id: response.id,
       kind: "stub" as const,
       content: response.content,
     };
   }
 
   return {
-    id,
+    id: response.id,
     kind: "direct" as const,
     content: response.content,
     citations: response.citations,

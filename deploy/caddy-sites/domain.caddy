@@ -1,6 +1,6 @@
 domain.didi.build {
 	handle /app/* {
-		respond "Frontend not yet deployed" 503
+		reverse_proxy domain-frontend:80
 	}
 
 	handle /health* {

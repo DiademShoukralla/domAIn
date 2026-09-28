@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 import time
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
@@ -8,51 +9,38 @@ import pytest
 from httpx import AsyncClient
 from httpx_ws import aconnect_ws
 from httpx_ws.transport import ASGIWebSocketTransport
-from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from domain.auth.api_key import ensure_bootstrap_api_key
 from domain.chat.service import process_message
 from domain.config import get_settings
-from domain.db.session import async_session_factory
 from domain.main import app
 from domain.schemas.chat import ChatIntent, ChatStatusUpdate, ResponseKind
 from domain.schemas.common import ActorContext, CouncilDecision, PersonaOpinion, Verdict
-
-
-async def _idle_in_transaction_count() -> int:
-    app_name = get_settings().database_application_name
-    async with async_session_factory() as session:
-        result = await session.execute(
-            text(
-                """
-                SELECT count(*)
-                FROM pg_stat_activity
-                WHERE datname = current_database()
-                  AND application_name = :app_name
-                  AND state = 'idle in transaction'
-                  AND pid != pg_backend_pid()
-                """
-            ),
-            {"app_name": app_name},
-        )
-        return int(result.scalar_one())
+from tests.integration.db_leak_diagnostics import (
+    count_idle_in_transaction_backends,
+    idle_in_transaction_failure_message,
+)
 
 
 async def _release_fixture_db_transaction(db_session: AsyncSession) -> None:
-    if db_session.in_transaction():
-        await db_session.rollback()
+    await db_session.rollback()
 
 
 async def _wait_for_no_idle_transactions(*, timeout_seconds: float = 5.0) -> None:
     deadline = time.monotonic() + timeout_seconds
     while time.monotonic() < deadline:
-        if await _idle_in_transaction_count() == 0:
+        if await count_idle_in_transaction_backends() == 0:
             return
         await asyncio.sleep(0.05)
-    count = await _idle_in_transaction_count()
-    pytest.fail(f"Expected no idle-in-transaction connections, found {count}")
+    report = await idle_in_transaction_failure_message()
+    pytest.fail(f"Expected no idle-in-transaction connections.\n{report}")
+
+
+@pytest.fixture(autouse=True)
+def _enable_sqlalchemy_pool_logging() -> None:
+    logging.getLogger("sqlalchemy.pool").setLevel(logging.DEBUG)
 
 
 @pytest.mark.asyncio
@@ -136,7 +124,7 @@ async def test_websocket_disconnect_cleans_up_pipeline_db_session(db_session) ->
 
     await _release_fixture_db_transaction(db_session)
     await _wait_for_no_idle_transactions()
-    assert await _idle_in_transaction_count() == 0
+    assert await count_idle_in_transaction_backends() == 0
 
 
 @pytest.mark.asyncio
@@ -179,4 +167,4 @@ async def test_pipeline_task_cancelled_mid_council_releases_db_connection(db_ses
 
     await _release_fixture_db_transaction(db_session)
     await _wait_for_no_idle_transactions()
-    assert await _idle_in_transaction_count() == 0
+    assert await count_idle_in_transaction_backends() == 0

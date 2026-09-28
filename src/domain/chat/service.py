@@ -1,3 +1,4 @@
+import asyncio
 from uuid import UUID
 
 from sqlalchemy import select
@@ -7,7 +8,7 @@ from domain.chat.classifier import classify_intent
 from domain.chat.router import route_message
 from domain.council.status import STATUS_QUEUE_SENTINEL, StatusQueue
 from domain.db.models import ChatMessage, WriteBackProposal
-from domain.db.session import async_session_factory
+from domain.db.session import managed_session
 from domain.schemas.chat import (
     ChatIntent,
     ChatMessageOut,
@@ -35,6 +36,7 @@ async def _persist_message(
     citations: list[Citation] | None = None,
     council_decision: CouncilDecision | None = None,
     refresh: bool = True,
+    commit: bool = True,
 ) -> ChatMessage:
     record = ChatMessage(
         session_id=session_id,
@@ -48,7 +50,10 @@ async def _persist_message(
         council_decision=council_decision.model_dump(mode="json") if council_decision else None,
     )
     db.add(record)
-    await db.commit()
+    if commit:
+        await db.commit()
+    else:
+        await db.flush()
     if refresh:
         await db.refresh(record)
     return record
@@ -91,16 +96,18 @@ async def process_message(
 ) -> ChatResponse:
     resolved_intent = intent or await classify_intent(content)
 
-    async with async_session_factory() as persist_db:
-        await _persist_message(
-            persist_db,
-            session_id=session_id,
-            actor=actor,
-            role=ChatRole.USER,
-            content=content,
-            classified_intent=resolved_intent,
-            refresh=False,
-        )
+    async with managed_session() as persist_db:
+        async with persist_db.begin():
+            await _persist_message(
+                persist_db,
+                session_id=session_id,
+                actor=actor,
+                role=ChatRole.USER,
+                content=content,
+                classified_intent=resolved_intent,
+                refresh=False,
+                commit=False,
+            )
 
     try:
         response = await route_message(
@@ -112,20 +119,26 @@ async def process_message(
         )
     finally:
         if status_queue is not None:
-            await status_queue.put(STATUS_QUEUE_SENTINEL)
+            try:
+                await status_queue.put(STATUS_QUEUE_SENTINEL)
+            except asyncio.CancelledError:
+                status_queue.put_nowait(STATUS_QUEUE_SENTINEL)
+                raise
 
-    async with async_session_factory() as persist_db:
-        assistant_record = await _persist_message(
-            persist_db,
-            session_id=session_id,
-            actor=actor,
-            role=ChatRole.ASSISTANT,
-            content=response.content,
-            classified_intent=response.classified_intent,
-            response_kind=response.response_kind,
-            citations=response.citations,
-            council_decision=response.council_decision,
-        )
+    async with managed_session() as persist_db:
+        async with persist_db.begin():
+            assistant_record = await _persist_message(
+                persist_db,
+                session_id=session_id,
+                actor=actor,
+                role=ChatRole.ASSISTANT,
+                content=response.content,
+                classified_intent=response.classified_intent,
+                response_kind=response.response_kind,
+                citations=response.citations,
+                council_decision=response.council_decision,
+                commit=False,
+            )
     return ChatResponse(id=assistant_record.id, **response.model_dump())
 
 

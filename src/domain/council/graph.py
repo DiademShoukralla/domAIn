@@ -9,7 +9,7 @@ from langgraph.types import Send
 from domain.council.chair import synthesize_decision
 from domain.council.personas import PERSONA_IDS, run_persona
 from domain.council.status import StatusQueue, emit_supervisor_status
-from domain.db.session import async_session_factory
+from domain.db.session import managed_session
 from domain.schemas.common import ActorContext, CouncilDecision, PersonaOpinion, ReviewRequest
 
 
@@ -47,7 +47,7 @@ def dispatch_personas(state: CouncilState) -> list[Send]:
 
 
 async def persona_node(state: PersonaWorkerState) -> dict[str, list[PersonaOpinion]]:
-    async with async_session_factory() as db:
+    async with managed_session() as db:
         opinion = await run_persona(
             persona=state["persona"],
             request=state["request"],

@@ -6,7 +6,7 @@ from starlette.responses import JSONResponse
 
 from domain.auth.api_key import validate_api_key
 from domain.config import get_settings
-from domain.db.session import async_session_factory
+from domain.db.session import managed_session
 from domain.schemas.common import ActorContext
 
 PUBLIC_PATHS = {
@@ -38,7 +38,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         if not api_key:
             return JSONResponse(status_code=401, content={"detail": "Missing X-API-Key header"})
 
-        async with async_session_factory() as session:
+        async with managed_session() as session:
             identity = await validate_api_key(session, api_key)
         if identity is None:
             return JSONResponse(status_code=401, content={"detail": "Invalid API key"})

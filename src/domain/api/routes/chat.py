@@ -11,7 +11,7 @@ from domain.auth.api_key import validate_api_key
 from domain.auth.middleware import get_actor
 from domain.chat.service import get_session_messages, process_message
 from domain.council.status import STATUS_QUEUE_SENTINEL, StatusQueue
-from domain.db.session import async_session_factory, get_db
+from domain.db.session import get_db, managed_session
 from domain.schemas.chat import ChatHistoryResponse, ChatMessageIn, ChatResponse
 from domain.schemas.common import ActorContext
 
@@ -21,7 +21,7 @@ router = APIRouter(prefix="/chat", tags=["chat"])
 
 
 async def _resolve_actor_from_api_key(api_key: str) -> ActorContext | None:
-    async with async_session_factory() as session:
+    async with managed_session() as session:
         identity = await validate_api_key(session, api_key)
     if identity is None:
         return None

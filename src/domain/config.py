@@ -14,6 +14,7 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+asyncpg://domain:domain@localhost:5432/domain"
     database_application_name: str = "domain"
+    database_echo_pool: bool = False
 
     token_encryption_key: str = ""
 

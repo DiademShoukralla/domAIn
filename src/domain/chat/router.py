@@ -9,7 +9,7 @@ from domain.chat.handlers import (
 )
 from domain.council import run_council
 from domain.council.status import StatusQueue, emit_supervisor_status
-from domain.db.session import async_session_factory
+from domain.db.session import managed_session
 from domain.schemas.chat import ChatIntent, RoutedChatResponse
 from domain.schemas.common import ActorContext
 
@@ -27,7 +27,7 @@ async def route_message(
     if resolved_intent == ChatIntent.GREETING:
         return await handle_greeting(session_id, message)
     if resolved_intent == ChatIntent.SIMPLE_RETRIEVAL:
-        async with async_session_factory() as db:
+        async with managed_session() as db:
             return await handle_simple_retrieval(session_id, message, actor, db)
     if resolved_intent == ChatIntent.STRATEGIC_SESSION:
         await emit_supervisor_status(status_queue, session_id, "alerting_council")
@@ -42,5 +42,5 @@ async def route_message(
     if resolved_intent == ChatIntent.LINEAR_WRITE:
         return await handle_linear_write(session_id, message)
 
-    async with async_session_factory() as db:
+    async with managed_session() as db:
         return await handle_simple_retrieval(session_id, message, actor, db)

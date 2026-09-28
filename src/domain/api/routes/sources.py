@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.auth.middleware import get_actor
 from domain.db.models import Connection, KnowledgeSource, Provider, SourceStatus, SourceType
-from domain.db.session import async_session_factory, get_db
+from domain.db.session import get_db, managed_session
 from domain.ingestion.pipeline import index_knowledge_source
 from domain.permissions import can_access
 from domain.schemas.common import ActorContext
@@ -29,7 +29,7 @@ def _validate_source_type_for_connection(source_type: SourceType, provider: Prov
 
 
 async def _run_index(source_id: UUID) -> None:
-    async with async_session_factory() as session:
+    async with managed_session() as session:
         await index_knowledge_source(session, source_id)
 
 

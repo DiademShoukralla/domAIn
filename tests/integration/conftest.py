@@ -27,8 +27,7 @@ async def db_session(apply_migrations: None) -> AsyncGenerator[AsyncSession, Non
         try:
             yield session
         finally:
-            if session.in_transaction():
-                await session.rollback()
+            await session.rollback()
             await session.execute(delete(WriteBackProposal))
             await session.execute(delete(ChatMessage))
             await session.execute(delete(Chunk))

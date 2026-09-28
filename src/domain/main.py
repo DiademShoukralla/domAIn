@@ -6,12 +6,12 @@ from fastapi import FastAPI
 from domain.api.routes import chat, connections, health, oauth, retrieval, sources, writeback
 from domain.auth.api_key import ensure_bootstrap_api_key
 from domain.auth.middleware import AuthMiddleware
-from domain.db.session import async_session_factory
+from domain.db.session import managed_session
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    async with async_session_factory() as session:
+    async with managed_session() as session:
         await ensure_bootstrap_api_key(session)
     yield
 

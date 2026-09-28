@@ -60,6 +60,17 @@ Run tests:
 uv run pytest
 ```
 
+## Production env on the droplet
+
+Production secrets live in `.env.production`, generated from `.env.production.example` via `deploy/generate-env.sh`. Deploy runs `deploy/generate-env.sh --check` before sourcing the env file; if template keys are missing, deploy aborts with instructions to run `--missing`.
+
+### Adding a new env var
+
+1. Add the variable (with a comment) to both `.env.production.example` and `.env.example`.
+2. Merge the change to `main`.
+3. On the droplet: `cd ~/domAIn && git pull && bash deploy/generate-env.sh --missing`.
+4. Deploy (GitHub Actions or manual `deploy/deploy.sh`).
+
 ## Architecture docs
 
 See `AGENTS.md` and `docs/adr/` for full architecture and product requirements.

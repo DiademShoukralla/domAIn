@@ -9,6 +9,7 @@ from httpx import AsyncClient
 from httpx_ws import aconnect_ws
 from httpx_ws.transport import ASGIWebSocketTransport
 from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from domain.auth.api_key import ensure_bootstrap_api_key
@@ -37,6 +38,11 @@ async def _idle_in_transaction_count() -> int:
             {"app_name": app_name},
         )
         return int(result.scalar_one())
+
+
+async def _release_fixture_db_transaction(db_session: AsyncSession) -> None:
+    if db_session.in_transaction():
+        await db_session.rollback()
 
 
 async def _wait_for_no_idle_transactions(*, timeout_seconds: float = 5.0) -> None:
@@ -128,7 +134,7 @@ async def test_websocket_disconnect_cleans_up_pipeline_db_session(db_session) ->
                 first_status = json.loads(await ws.receive_text())
                 assert first_status["status"] == "alerting_council"
 
-    await db_session.commit()
+    await _release_fixture_db_transaction(db_session)
     await _wait_for_no_idle_transactions()
     assert await _idle_in_transaction_count() == 0
 
@@ -157,29 +163,20 @@ async def test_pipeline_task_cancelled_mid_council_releases_db_connection(db_ses
             )
         await asyncio.Event().wait()
 
-    async def run_pipeline() -> None:
-        async with async_session_factory() as session:
-            try:
-                await process_message(
-                    db=session,
-                    session_id=session_id,
-                    content="Review this proposal",
-                    actor=actor,
-                    intent=ChatIntent.STRATEGIC_SESSION,
-                )
-            finally:
-                if session.in_transaction():
-                    await session.rollback()
-
-    with (
-        patch("domain.chat.router.run_council", side_effect=hang_council),
-    ):
-        task = asyncio.create_task(run_pipeline())
+    with patch("domain.chat.router.run_council", side_effect=hang_council):
+        task = asyncio.create_task(
+            process_message(
+                session_id=session_id,
+                content="Review this proposal",
+                actor=actor,
+                intent=ChatIntent.STRATEGIC_SESSION,
+            )
+        )
         await asyncio.sleep(0.15)
         task.cancel()
         with pytest.raises(asyncio.CancelledError):
             await task
 
-    await db_session.commit()
+    await _release_fixture_db_transaction(db_session)
     await _wait_for_no_idle_transactions()
     assert await _idle_in_transaction_count() == 0

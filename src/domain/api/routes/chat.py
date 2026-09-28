@@ -62,18 +62,12 @@ async def chat_websocket(
             status_queue: StatusQueue = asyncio.Queue()
 
             async def run_message_pipeline() -> ChatResponse:
-                async with async_session_factory() as session:
-                    try:
-                        return await process_message(
-                            db=session,
-                            session_id=message.session_id,
-                            content=message.content,
-                            actor=actor,
-                            status_queue=status_queue,
-                        )
-                    finally:
-                        if session.in_transaction():
-                            await session.rollback()
+                return await process_message(
+                    session_id=message.session_id,
+                    content=message.content,
+                    actor=actor,
+                    status_queue=status_queue,
+                )
 
             try:
                 active_pipeline_task = asyncio.create_task(run_message_pipeline())

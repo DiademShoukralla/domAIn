@@ -21,7 +21,6 @@ async def test_route_greeting_does_not_call_retrieval() -> None:
             session_id=session_id,
             message="Hello!",
             actor=actor,
-            db=AsyncMock(),
             intent=ChatIntent.GREETING,
         )
 
@@ -43,7 +42,6 @@ async def test_route_strategic_session_runs_council() -> None:
             session_id=session_id,
             message="Review this proposal",
             actor=actor,
-            db=AsyncMock(),
             intent=ChatIntent.STRATEGIC_SESSION,
         )
 
@@ -66,7 +64,6 @@ async def test_route_strategic_session_emits_alerting_council() -> None:
             session_id=session_id,
             message="Review this proposal",
             actor=actor,
-            db=AsyncMock(),
             intent=ChatIntent.STRATEGIC_SESSION,
             status_queue=queue,
         )
@@ -87,14 +84,12 @@ async def test_route_linear_stubs_return_not_implemented() -> None:
         session_id=session_id,
         message="Show Linear issue 1",
         actor=actor,
-        db=AsyncMock(),
         intent=ChatIntent.LINEAR_READ,
     )
     write_response = await route_message(
         session_id=session_id,
         message="Update Linear issue 1",
         actor=actor,
-        db=AsyncMock(),
         intent=ChatIntent.LINEAR_WRITE,
     )
 

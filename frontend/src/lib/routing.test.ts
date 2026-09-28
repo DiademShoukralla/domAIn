@@ -12,6 +12,7 @@ describe("resolveAppView", () => {
     expect(resolveAppView("/app")).toBe("chat");
     expect(resolveAppView("/app/connections")).toBe("connections");
     expect(resolveAppView("/app/connections/")).toBe("connections");
+    expect(resolveAppView("/app/not-allowed")).toBe("not-allowed");
   });
 });
 
@@ -32,6 +33,7 @@ describe("appPath", () => {
   it("builds chat and connections URLs from the vite base", () => {
     expect(appPath("chat")).toBe("/app/");
     expect(appPath("connections")).toBe("/app/connections");
+    expect(appPath("not-allowed")).toBe("/app/not-allowed");
   });
 });
 

@@ -53,7 +53,6 @@ function WriteBackCardHarness({
   return (
     <WriteBackCard
       messageId="message-1"
-      apiKey="test-key"
       proposal={proposal}
       onProposalUpdate={setProposal}
     />
@@ -80,7 +79,7 @@ describe("WriteBackCard", () => {
     await user.click(screen.getByRole("button", { name: "Propose write-back" }));
 
     await waitFor(() => {
-      expect(mockedProposeWriteBack).toHaveBeenCalledWith("test-key", "message-1");
+      expect(mockedProposeWriteBack).toHaveBeenCalledWith("message-1");
     });
     expect(screen.getByText("Create new doc: council-scope")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Propose write-back" })).not.toBeInTheDocument();
@@ -108,7 +107,6 @@ describe("WriteBackCard", () => {
 
     await waitFor(() => {
       expect(mockedRefineWriteBackProposal).toHaveBeenCalledWith(
-        "test-key",
         "proposal-1",
         "Add roadmap item",
       );
@@ -140,7 +138,7 @@ describe("WriteBackCard", () => {
     await user.click(screen.getByRole("button", { name: "Confirm" }));
 
     await waitFor(() => {
-      expect(mockedConfirmWriteBackProposal).toHaveBeenCalledWith("test-key", "proposal-1");
+      expect(mockedConfirmWriteBackProposal).toHaveBeenCalledWith("proposal-1");
     });
     expect(
       screen.getByRole("link", { name: "Add council decision doc (council-scope)" }),

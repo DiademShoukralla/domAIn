@@ -3,24 +3,18 @@ import type { ChatMessageIn, ChatResponse, IncomingFrame } from "../types/chat";
 import { isChatResponse, isChatStatusUpdate } from "../types/chat";
 
 interface UseChatWebSocketOptions {
-  apiKey: string;
   enabled: boolean;
   onStatus: (frame: IncomingFrame) => void;
   onError: (message: string) => void;
 }
 
-function websocketUrl(apiKey: string): string {
+function websocketUrl(): string {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   const host = window.location.host;
-  return `${protocol}//${host}/chat/ws?api_key=${encodeURIComponent(apiKey)}`;
+  return `${protocol}//${host}/chat/ws`;
 }
 
-export function useChatWebSocket({
-  apiKey,
-  enabled,
-  onStatus,
-  onError,
-}: UseChatWebSocketOptions) {
+export function useChatWebSocket({ enabled, onStatus, onError }: UseChatWebSocketOptions) {
   const socketRef = useRef<WebSocket | null>(null);
   const onStatusRef = useRef(onStatus);
   const onErrorRef = useRef(onError);
@@ -39,12 +33,12 @@ export function useChatWebSocket({
   }, [onError]);
 
   useEffect(() => {
-    if (!enabled || !apiKey) {
+    if (!enabled) {
       setConnected(false);
       return;
     }
 
-    const socket = new WebSocket(websocketUrl(apiKey));
+    const socket = new WebSocket(websocketUrl());
     socketRef.current = socket;
 
     socket.addEventListener("open", () => {
@@ -58,7 +52,7 @@ export function useChatWebSocket({
     });
 
     socket.addEventListener("error", () => {
-      onErrorRef.current("Chat connection failed. Check the API key and try again.");
+      onErrorRef.current("Chat connection failed. Sign in again or refresh the page.");
     });
 
     socket.addEventListener("message", (event) => {
@@ -83,7 +77,7 @@ export function useChatWebSocket({
       socket.close();
       socketRef.current = null;
     };
-  }, [apiKey, enabled]);
+  }, [enabled]);
 
   const sendMessage = useCallback((payload: ChatMessageIn): Promise<ChatResponse> => {
     const socket = socketRef.current;

@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { deleteSource, fetchSources, refreshSource } from "../lib/api";
+import type { AuthUser } from "../lib/auth";
 import { appPath, parseConnectionCallback, providerDisplayName } from "../lib/routing";
 import type { KnowledgeSource } from "../types/sources";
+import { SignOutButton } from "./SignOutButton";
 import { SourceListItem } from "./SourceListItem";
 
 interface ConnectionsViewProps {
-  apiKey: string;
+  user: AuthUser | null;
+  onSignOut: () => void;
 }
 
 const POLL_INTERVAL_MS = 3000;
@@ -14,7 +17,7 @@ function hasActiveSources(sources: KnowledgeSource[]): boolean {
   return sources.some((source) => source.status === "pending" || source.status === "indexing");
 }
 
-export function ConnectionsView({ apiKey }: ConnectionsViewProps) {
+export function ConnectionsView({ user, onSignOut }: ConnectionsViewProps) {
   const [sources, setSources] = useState<KnowledgeSource[]>([]);
   const [loading, setLoading] = useState(true);
   const [busySourceId, setBusySourceId] = useState<string | null>(null);
@@ -22,9 +25,9 @@ export function ConnectionsView({ apiKey }: ConnectionsViewProps) {
   const [confirmation, setConfirmation] = useState<string | null>(null);
 
   const loadSources = useCallback(async () => {
-    const payload = await fetchSources(apiKey);
+    const payload = await fetchSources();
     setSources(payload.sources);
-  }, [apiKey]);
+  }, []);
 
   useEffect(() => {
     const callback = parseConnectionCallback();
@@ -80,7 +83,7 @@ export function ConnectionsView({ apiKey }: ConnectionsViewProps) {
     setBusySourceId(sourceId);
     setError(null);
     try {
-      const updated = await refreshSource(apiKey, sourceId);
+      const updated = await refreshSource(sourceId);
       setSources((current) =>
         current.map((source) => (source.id === sourceId ? updated : source)),
       );
@@ -95,7 +98,7 @@ export function ConnectionsView({ apiKey }: ConnectionsViewProps) {
     setBusySourceId(sourceId);
     setError(null);
     try {
-      await deleteSource(apiKey, sourceId);
+      await deleteSource(sourceId);
       setSources((current) => current.filter((source) => source.id !== sourceId));
     } catch (deleteError) {
       setError(deleteError instanceof Error ? deleteError.message : "Failed to delete source.");
@@ -111,14 +114,18 @@ export function ConnectionsView({ apiKey }: ConnectionsViewProps) {
           <p className="overline">domAIn</p>
           <h1 className="dom-header__title">Connections</h1>
         </div>
-        <nav className="dom-nav" aria-label="App sections">
-          <a className="dom-nav__link" href={appPath("chat")}>
-            Chat
-          </a>
-          <a className="dom-nav__link dom-nav__link--active" href={appPath("connections")} aria-current="page">
-            Connections
-          </a>
-        </nav>
+        <div className="dom-header__aside">
+          <nav className="dom-nav" aria-label="App sections">
+            <a className="dom-nav__link" href={appPath("chat")}>
+              Chat
+            </a>
+            <a className="dom-nav__link dom-nav__link--active" href={appPath("connections")} aria-current="page">
+              Connections
+            </a>
+          </nav>
+          {user ? <p className="caption dom-header__user">@{user.login}</p> : null}
+          <SignOutButton onSignedOut={onSignOut} />
+        </div>
       </header>
 
       <section className="dom-connections layout-thread">

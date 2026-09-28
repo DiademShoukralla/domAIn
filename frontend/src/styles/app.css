@@ -207,6 +207,185 @@ textarea {
   margin-top: var(--space-2);
 }
 
+.dom-header__aside {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  justify-content: end;
+  gap: var(--space-3);
+}
+
+.dom-header__user {
+  margin: 0;
+}
+
+.dom-signout {
+  min-height: var(--layout-control-h-sm);
+}
+
+.dom-app--auth {
+  min-height: 100vh;
+  padding: 0;
+  display: block;
+}
+
+.dom-auth {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-auth-bg);
+  color: var(--color-auth-text);
+}
+
+.dom-auth__main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-8);
+  padding: 0 var(--space-8);
+  max-width: 420px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.dom-auth__copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.dom-auth__title {
+  margin: 0;
+  font: var(--text-display-md);
+  letter-spacing: -0.02em;
+}
+
+.dom-auth__lede {
+  margin: 0;
+  font: var(--text-body);
+  color: var(--color-auth-muted);
+  text-wrap: pretty;
+}
+
+.dom-auth__github-btn,
+.dom-auth__primary-btn,
+.dom-auth__secondary-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  border-radius: var(--radius-auth-button);
+  font: 600 16px/24px var(--font-sans);
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+}
+
+.dom-auth__github-btn {
+  gap: var(--space-3);
+  background: var(--color-auth-text);
+  color: var(--color-auth-bg);
+}
+
+.dom-auth__github-btn:disabled {
+  opacity: 0.85;
+  cursor: wait;
+}
+
+.dom-auth__github-mark {
+  width: 20px;
+  height: 20px;
+}
+
+.dom-auth__primary-btn {
+  background: var(--color-auth-accent);
+  color: var(--color-auth-accent-fg);
+}
+
+.dom-auth__secondary-btn {
+  background: transparent;
+  color: var(--color-auth-text);
+  border: 1px solid var(--color-auth-border);
+}
+
+.dom-auth__actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.dom-auth__hint {
+  margin: 0;
+  color: var(--color-auth-muted);
+  text-align: center;
+}
+
+.dom-auth__identity {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  align-self: flex-start;
+  padding: var(--space-2) var(--space-3) var(--space-2) var(--space-2);
+  border-radius: var(--radius-pill);
+  background: var(--color-auth-surface);
+  border: 1px solid var(--color-auth-border);
+}
+
+.dom-auth__avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-auth-surface-2);
+  font: 600 11px/1 var(--font-sans);
+}
+
+.dom-auth__identity-text {
+  font-size: 14px;
+}
+
+.dom-auth__footer {
+  margin: 0;
+  padding: 0 var(--space-8) var(--space-8);
+  font-size: 13px;
+  color: var(--color-auth-muted);
+  text-align: left;
+  max-width: 420px;
+  width: 100%;
+  margin-inline: auto;
+}
+
+.dom-auth__link {
+  color: var(--color-auth-accent-text);
+  text-decoration: none;
+}
+
+.dom-mark {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--color-auth-accent);
+}
+
+.dom-mark__dots {
+  display: flex;
+  align-items: flex-start;
+}
+
+.dom-mark__dots span {
+  border-radius: 50%;
+  background: var(--color-auth-accent-fg);
+}
+
+.dom-mark > span:last-child {
+  background: var(--color-auth-accent-fg);
+}
+
 .dom-error {
   color: var(--color-danger);
   margin: 0;

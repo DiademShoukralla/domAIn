@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>body{margin:0;background:#e8e4de;font-family:'Geist',system-ui,sans-serif;-webkit-font-smoothing:antialiased}a{color:#a4560c}a:hover{color:#7a3f08}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px 'Geist Mono',monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 'Geist',sans-serif;color:#1a1a1a}.dv-grp{font:600 11px/1 'Geist Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:#7a7268;margin:36px 0 14px}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px 'Geist Mono',monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:500 12px/1.3 'Geist',sans-serif;color:#2a2622}.dv-note{max-width:380px;font:400 12px/1.5 'Geist',sans-serif;color:#645c52;text-wrap:pretty}.dv-opt:target .dv-oid{background:#a4560c;color:#fff}.dv-next{margin:28px 0 0;font:12px/1.5 'Geist',sans-serif;color:rgba(0,0,0,.5)}</style>
+</helmet>
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">domAIn redesign: foundations, every screen, key states</span></div>
+
+<div class="dv-grp">Foundations</div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a"><div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Layout and navigation decisions</div>
+<div style="width:520px;background:#fffdfa;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:28px;display:flex;flex-direction:column;gap:18px;color:#1d1a16;font-size:14px;line-height:1.55">
+<div style="font-size:20px;font-weight:600;letter-spacing:-.01em">What changed and why</div>
+<div style="display:flex;flex-direction:column;gap:14px;text-wrap:pretty">
+<div><b style="font-weight:600">One top bar, everywhere.</b> Mark on the left, a Chat / Connections switch in the middle, your account on the right. The switch is the only place the section name appears, so nothing is duplicated. With only two destinations, a segmented control is clearer than a tab bar, and keeping it at the top leaves the bottom of the screen to the composer and the keyboard.</div>
+<div><b style="font-weight:600">Chat status is quiet when healthy.</b> When the live connection drops, a strip appears directly above the composer saying what's happening and what happens to your message. The current state is also listed in the account menu.</div>
+<div><b style="font-weight:600">Sources live above the input, not in it.</b> "Answering from 3 sources" sits on its own line and opens Connections. The placeholder is short enough to never wrap.</div>
+<div><b style="font-weight:600">The router is visible.</b> Every reply is labelled Direct answer or Council review, so it's clear why some replies take longer.</div>
+<div><b style="font-weight:600">Council progress is a timeline.</b> Each seat has its own lane with four steps and a line saying what it's looking at right now. The chair waits until all three verdicts are in.</div>
+<div><b style="font-weight:600">The chair owns the accent.</b> In chat, the recommendation is the only amber-tinted surface, so the outcome stands apart from the three opinions.</div>
+<div><b style="font-weight:600">The write-back plan never disappears.</b> Refining, confirming, success and failure all happen inside the same card. An error explains itself and offers Retry, with the plan still below it.</div>
+<div><b style="font-weight:600">Empty means guided.</b> With no sources, chat shows how to connect one instead of a dead input.</div>
+</div>
+</div></div>
+
+<div class="dv-opt" id="1b"><div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>App mark</div>
+<div style="width:300px;background:#fffdfa;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:28px;display:flex;flex-direction:column;gap:22px;color:#1d1a16">
+<div style="display:flex;gap:18px;align-items:flex-end">
+<div style="width:96px;height:96px;border-radius:24px;background:#f0a24b;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px"><div style="display:flex;gap:11px;align-items:flex-start"><div style="width:15px;height:15px;border-radius:50%;background:#1b1206;margin-top:7px"></div><div style="width:15px;height:15px;border-radius:50%;background:#1b1206"></div><div style="width:15px;height:15px;border-radius:50%;background:#1b1206;margin-top:7px"></div></div><div style="width:52px;height:10px;border-radius:5px;background:#1b1206"></div></div>
+<div style="width:48px;height:48px;border-radius:12px;background:#141210;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px"><div style="display:flex;gap:5px;align-items:flex-start"><div style="width:8px;height:8px;border-radius:50%;background:#f0a24b;margin-top:3px"></div><div style="width:8px;height:8px;border-radius:50%;background:#f0a24b"></div><div style="width:8px;height:8px;border-radius:50%;background:#f0a24b;margin-top:3px"></div></div><div style="width:26px;height:5px;border-radius:3px;background:#f0a24b"></div></div>
+<div style="width:26px;height:26px;border-radius:7px;background:#f0a24b;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><div style="display:flex;gap:2px;align-items:flex-start"><div style="width:4px;height:4px;border-radius:50%;background:#1b1206;margin-top:1px"></div><div style="width:4px;height:4px;border-radius:50%;background:#1b1206"></div><div style="width:4px;height:4px;border-radius:50%;background:#1b1206;margin-top:1px"></div></div><div style="width:14px;height:3px;border-radius:2px;background:#1b1206"></div></div>
+</div>
+<div style="font-size:13px;line-height:1.55;color:#4d463e;text-wrap:pretty">Three seats around one table. The dots sit in a slight arc, like chairs facing the viewer; the bar is the single recommendation they arrive at. Built from circles and one rounded bar, so it holds up at favicon size.</div>
+<div style="display:flex;align-items:center;gap:8px"><div style="width:26px;height:26px;border-radius:7px;background:#f0a24b;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><div style="display:flex;gap:2px;align-items:flex-start"><div style="width:4px;height:4px;border-radius:50%;background:#1b1206;margin-top:1px"></div><div style="width:4px;height:4px;border-radius:50%;background:#1b1206"></div><div style="width:4px;height:4px;border-radius:50%;background:#1b1206;margin-top:1px"></div></div><div style="width:14px;height:3px;border-radius:2px;background:#1b1206"></div></div><span style="font-size:18px;font-weight:600;letter-spacing:-.02em">domAIn</span></div>
+</div></div>
+
+<div class="dv-opt" id="1c"><div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Tokens</div>
+<div style="width:560px;background:#fffdfa;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:28px;display:flex;flex-direction:column;gap:22px;color:#1d1a16;font-size:13px">
+<div style="display:grid;grid-template-columns:110px 1fr 1fr;gap:6px 12px;align-items:center;font-family:'Geist Mono',monospace;font-size:11.5px">
+<div style="color:#7a7268">token</div><div style="color:#7a7268">dark</div><div style="color:#7a7268">light</div>
+<div>bg</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#141210;border:1px solid rgba(0,0,0,.1)"></span>#141210</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#faf8f5;border:1px solid rgba(0,0,0,.1)"></span>#FAF8F5</div>
+<div>surface</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#1c1a17;border:1px solid rgba(0,0,0,.1)"></span>#1C1A17</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#ffffff;border:1px solid rgba(0,0,0,.1)"></span>#FFFFFF</div>
+<div>surface-2</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#26231f;border:1px solid rgba(0,0,0,.1)"></span>#26231F</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#f2eee8;border:1px solid rgba(0,0,0,.1)"></span>#F2EEE8</div>
+<div>border</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#34302a;border:1px solid rgba(0,0,0,.1)"></span>#34302A</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#e5dfd6;border:1px solid rgba(0,0,0,.1)"></span>#E5DFD6</div>
+<div>text</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#f3efe9;border:1px solid rgba(0,0,0,.1)"></span>#F3EFE9</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#1d1a16;border:1px solid rgba(0,0,0,.1)"></span>#1D1A16</div>
+<div>text-muted</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#a8a095;border:1px solid rgba(0,0,0,.1)"></span>#A8A095</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#6a6258;border:1px solid rgba(0,0,0,.1)"></span>#6A6258</div>
+<div>accent</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#f0a24b;border:1px solid rgba(0,0,0,.1)"></span>#F0A24B</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#ec9a45;border:1px solid rgba(0,0,0,.1)"></span>#EC9A45</div>
+<div>on-accent</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#1b1206;border:1px solid rgba(0,0,0,.1)"></span>#1B1206</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#1b1206;border:1px solid rgba(0,0,0,.1)"></span>#1B1206</div>
+<div>accent-text</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#f5b56e;border:1px solid rgba(0,0,0,.1)"></span>#F5B56E</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#a4560c;border:1px solid rgba(0,0,0,.1)"></span>#A4560C</div>
+<div>accent-soft</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:rgba(240,162,75,.14);border:1px solid rgba(0,0,0,.1)"></span>accent 14%</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:rgba(236,154,69,.16);border:1px solid rgba(0,0,0,.1)"></span>accent 16%</div>
+<div>success</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#72c493;border:1px solid rgba(0,0,0,.1)"></span>#72C493</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#2f8a55;border:1px solid rgba(0,0,0,.1)"></span>#2F8A55</div>
+<div>danger</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#f08e7e;border:1px solid rgba(0,0,0,.1)"></span>#F08E7E</div><div style="display:flex;gap:8px;align-items:center"><span style="width:22px;height:22px;border-radius:6px;background:#c2412f;border:1px solid rgba(0,0,0,.1)"></span>#C2412F</div>
+</div>
+<div style="height:1px;background:#e5dfd6"></div>
+<div style="display:grid;grid-template-columns:110px 1fr;gap:10px 12px;align-items:baseline">
+<div style="font-family:'Geist Mono',monospace;font-size:11.5px;color:#7a7268">display 40/44</div><div style="font-size:40px;line-height:44px;font-weight:600;letter-spacing:-.03em">One ships.</div>
+<div style="font-family:'Geist Mono',monospace;font-size:11.5px;color:#7a7268">title 24/30</div><div style="font-size:24px;line-height:30px;font-weight:600;letter-spacing:-.015em">Connect a source</div>
+<div style="font-family:'Geist Mono',monospace;font-size:11.5px;color:#7a7268">heading 17/24</div><div style="font-size:17px;line-height:24px;font-weight:600">Prepare now, migrate after launch</div>
+<div style="font-family:'Geist Mono',monospace;font-size:11.5px;color:#7a7268">body 15/22</div><div style="font-size:15px;line-height:22px">Chat and reading text. Never below 15 on mobile inputs.</div>
+<div style="font-family:'Geist Mono',monospace;font-size:11.5px;color:#7a7268">small 13/18</div><div style="font-size:13px;line-height:18px;color:#6a6258">Labels, meta, helper lines</div>
+<div style="font-family:'Geist Mono',monospace;font-size:11.5px;color:#7a7268">mono 12/16</div><div style="font-family:'Geist Mono',monospace;font-size:12px;line-height:16px">acme/api · src/auth/session.ts</div>
+</div>
+<div style="font-size:12px;color:#6a6258">Geist 400 / 500 / 600 for UI. Geist Mono for citations, file paths and issue ids.</div>
+<div style="height:1px;background:#e5dfd6"></div>
+<div style="display:flex;gap:28px;flex-wrap:wrap">
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font-family:'Geist Mono',monospace;font-size:11.5px;color:#7a7268">spacing</div><div style="display:flex;gap:6px;align-items:flex-end">
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:4px;height:4px;background:#ec9a45"></div><span style="font:10px 'Geist Mono'">4</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:8px;height:8px;background:#ec9a45"></div><span style="font:10px 'Geist Mono'">8</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:12px;height:12px;background:#ec9a45"></div><span style="font:10px 'Geist Mono'">12</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:16px;height:16px;background:#ec9a45"></div><span style="font:10px 'Geist Mono'">16</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:24px;height:24px;background:#ec9a45"></div><span style="font:10px 'Geist Mono'">24</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:32px;height:32px;background:#ec9a45"></div><span style="font:10px 'Geist Mono'">32</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:48px;height:48px;background:#ec9a45"></div><span style="font:10px 'Geist Mono'">48</span></div>
+</div></div>
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font-family:'Geist Mono',monospace;font-size:11.5px;color:#7a7268">radii</div><div style="display:flex;gap:10px;align-items:flex-end">
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:36px;height:36px;border:1.5px solid #1d1a16;border-radius:6px"></div><span style="font:10px 'Geist Mono'">6 chip</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:36px;height:36px;border:1.5px solid #1d1a16;border-radius:10px"></div><span style="font:10px 'Geist Mono'">10 control</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:36px;height:36px;border:1.5px solid #1d1a16;border-radius:14px"></div><span style="font:10px 'Geist Mono'">14 card</span></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div style="width:36px;height:36px;border:1.5px solid #1d1a16;border-radius:999px"></div><span style="font:10px 'Geist Mono'">pill</span></div>
+</div></div>
+</div>
+<div style="font-size:12px;color:#6a6258;text-wrap:pretty">Controls are 44px tall on mobile (36px compact on desktop). Buttons are solid shapes, never underlined text: primary uses accent, secondary uses a 1px border, quiet uses text-muted with no border.</div>
+</div></div>
+
+<div class="dv-opt" id="1d"><div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a>Error wording</div>
+<div style="width:360px;background:#fffdfa;border:1px solid rgba(0,0,0,.08);border-radius:12px;padding:28px;display:flex;flex-direction:column;gap:16px;color:#1d1a16;font-size:13px;line-height:1.5">
+<div style="text-wrap:pretty;color:#4d463e">Raw responses are never shown. Each error maps to a sentence saying what happened, plus one next step.</div>
+<div style="display:flex;flex-direction:column;gap:4px"><div style="font:11px 'Geist Mono',monospace;color:#a4560c">401 · invalid session</div><div>Your session has ended. Sign in again to keep going.</div></div>
+<div style="display:flex;flex-direction:column;gap:4px"><div style="font:11px 'Geist Mono',monospace;color:#a4560c">403 · repo access lost</div><div>domAIn can't read acme/legacy anymore. Give it access in GitHub, then refresh.</div></div>
+<div style="display:flex;flex-direction:column;gap:4px"><div style="font:11px 'Geist Mono',monospace;color:#a4560c">429 · rate limited</div><div>GitHub asked us to slow down. We'll try again in a minute.</div></div>
+<div style="display:flex;flex-direction:column;gap:4px"><div style="font:11px 'Geist Mono',monospace;color:#a4560c">5xx · council failed</div><div>The council couldn't finish this one. Your question is saved. Try again.</div></div>
+<div style="display:flex;flex-direction:column;gap:4px"><div style="font:11px 'Geist Mono',monospace;color:#a4560c">unknown</div><div>Something went wrong on our side. Try again, and if it keeps happening, let me know.</div></div>
+</div></div>
+</div>
+
+<div class="dv-grp">Entry · mobile, dark</div>
+<div class="dv-opts" style="--bg:#141210;--sf:#1c1a17;--sf2:#26231f;--bd:#34302a;--fg:#f3efe9;--mu:#a8a095;--ac:#f0a24b;--acfg:#1b1206;--act:#f5b56e;--acs:rgba(240,162,75,.14);--ok:#72c493;--oks:rgba(114,196,147,.14);--er:#f08e7e;--ers:rgba(240,142,126,.13)">
+
+<div class="dv-opt" id="1e"><div class="dv-olabel"><a class="dv-oid" href="#1e">1e</a>Landing · /</div>
+<div style="width:380px;border-radius:28px;overflow:hidden;background:var(--bg);color:var(--fg);box-shadow:0 10px 30px rgba(0,0,0,.18)">
+<div style="height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 18px">
+<div style="display:flex;align-items:center;gap:8px"><div style="width:26px;height:26px;border-radius:7px;background:var(--ac);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><div style="display:flex;gap:2px;align-items:flex-start"><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg)"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div></div><div style="width:14px;height:3px;border-radius:2px;background:var(--acfg)"></div></div><span style="font-size:17px;font-weight:600;letter-spacing:-.02em">domAIn</span></div>
+<div style="height:36px;padding:0 14px;border-radius:10px;border:1px solid var(--bd);display:flex;align-items:center;font-size:14px;font-weight:500">Open app</div>
+</div>
+<div style="padding:40px 22px 36px;display:flex;flex-direction:column;gap:20px">
+<div style="font-size:38px;line-height:42px;font-weight:600;letter-spacing:-.03em;text-wrap:balance">Three seats debate. <span style="color:var(--act)">One recommendation ships.</span></div>
+<div style="font-size:16px;line-height:24px;color:var(--mu);text-wrap:pretty">domAIn reads your GitHub repos and Linear workspace. Ask a quick question and get an answer with sources. Ask a hard one and three reviewers weigh in, then a chair gives you one recommendation you can turn into a pull request and issues.</div>
+<div style="display:flex;flex-direction:column;gap:10px;margin-top:4px">
+<div style="height:48px;border-radius:10px;background:var(--ac);color:var(--acfg);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">Open domAIn</div>
+<div style="height:48px;border-radius:10px;border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500">See how it works</div>
+</div>
+</div>
+<div style="margin:0 16px;padding:16px;border-radius:14px;background:var(--sf);border:1px solid var(--bd);display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px 'Geist Mono',monospace;color:var(--mu);letter-spacing:.04em">SHOULD WE MOVE AUTH BEFORE LAUNCH?</div>
+<div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="width:24px;height:24px;border-radius:50%;background:var(--sf2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">B</span><span style="flex:1">Builder</span><span style="font-size:12px;padding:3px 8px;border-radius:6px;background:var(--oks);color:var(--ok)">For</span></div>
+<div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="width:24px;height:24px;border-radius:50%;background:var(--sf2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">S</span><span style="flex:1">Skeptic</span><span style="font-size:12px;padding:3px 8px;border-radius:6px;background:var(--ers);color:var(--er)">Against</span></div>
+<div style="display:flex;align-items:center;gap:10px;font-size:14px"><span style="width:24px;height:24px;border-radius:50%;background:var(--sf2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">C</span><span style="flex:1">Customer</span><span style="font-size:12px;padding:3px 8px;border-radius:6px;border:1px solid var(--bd);color:var(--fg)">With conditions</span></div>
+<div style="padding:12px;border-radius:10px;background:var(--acs);display:flex;flex-direction:column;gap:4px"><div style="font:500 11px 'Geist Mono',monospace;color:var(--act)">CHAIR</div><div style="font-size:14px;font-weight:600">Prepare now, migrate after launch.</div></div>
+</div>
+<div style="padding:40px 22px 8px;display:flex;flex-direction:column;gap:22px">
+<div style="font-size:22px;font-weight:600;letter-spacing:-.015em">How it works</div>
+<div style="display:flex;gap:14px"><div style="font:500 13px 'Geist Mono',monospace;color:var(--act);width:20px">01</div><div style="display:flex;flex-direction:column;gap:4px"><div style="font-size:16px;font-weight:600">Connect your sources</div><div style="font-size:14px;line-height:21px;color:var(--mu)">Pick the repos and Linear workspace domAIn can read.</div></div></div>
+<div style="display:flex;gap:14px"><div style="font:500 13px 'Geist Mono',monospace;color:var(--act);width:20px">02</div><div style="display:flex;flex-direction:column;gap:4px"><div style="font-size:16px;font-weight:600">Ask in one chat</div><div style="font-size:14px;line-height:21px;color:var(--mu)">Simple questions get a direct answer. Big decisions go to the council.</div></div></div>
+<div style="display:flex;gap:14px"><div style="font:500 13px 'Geist Mono',monospace;color:var(--act);width:20px">03</div><div style="display:flex;flex-direction:column;gap:4px"><div style="font-size:16px;font-weight:600">Ship the decision</div><div style="font-size:14px;line-height:21px;color:var(--mu)">Review the plan, adjust it, and domAIn opens the PR and issues for you.</div></div></div>
+</div>
+<div style="margin-top:36px;padding:18px 22px 26px;border-top:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--mu)">
+<div style="display:flex;align-items:center;gap:8px"><span style="width:7px;height:7px;border-radius:50%;background:var(--ok)"></span>All systems operational</div><div>© 2026 domAIn</div>
+</div>
+</div>
+<div class="dv-note">Status is a quiet line in the footer, driven by the health check but never linking to it. If degraded: amber dot, "Some features are slow right now".</div>
+</div>
+
+<div class="dv-opt" id="1f"><div class="dv-olabel"><a class="dv-oid" href="#1f">1f</a>Sign in · /app signed out</div>
+<div style="width:380px;height:780px;border-radius:28px;overflow:hidden;background:var(--bg);color:var(--fg);box-shadow:0 10px 30px rgba(0,0,0,.18);display:flex;flex-direction:column">
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 28px;gap:28px">
+<div style="width:48px;height:48px;border-radius:12px;background:var(--ac);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px"><div style="display:flex;gap:5px;align-items:flex-start"><div style="width:8px;height:8px;border-radius:50%;background:var(--acfg);margin-top:3px"></div><div style="width:8px;height:8px;border-radius:50%;background:var(--acfg)"></div><div style="width:8px;height:8px;border-radius:50%;background:var(--acfg);margin-top:3px"></div></div><div style="width:26px;height:5px;border-radius:3px;background:var(--acfg)"></div></div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font-size:28px;line-height:34px;font-weight:600;letter-spacing:-.02em">Sign in to domAIn</div>
+<div style="font-size:15px;line-height:22px;color:var(--mu);text-wrap:pretty">domAIn is private for now. Use the GitHub account I've invited.</div>
+</div>
+<div style="height:48px;border-radius:10px;background:var(--fg);color:var(--bg);display:flex;align-items:center;justify-content:center;gap:10px;font-size:16px;font-weight:600"><span style="width:18px;height:18px;border-radius:50%;background:var(--bg)"></span>Sign in with GitHub</div>
+</div>
+<div style="padding:0 28px 28px;font-size:13px;color:var(--mu)">Back to <span style="color:var(--act)">domAIn.app</span></div>
+</div>
+<div class="dv-note">One action. The circle in the button stands in for the GitHub mark (use the official asset). Tapping shows "Taking you to GitHub…" in the button.</div>
+</div>
+
+<div class="dv-opt" id="1g"><div class="dv-olabel"><a class="dv-oid" href="#1g">1g</a>Not on the allowlist</div>
+<div style="width:380px;height:780px;border-radius:28px;overflow:hidden;background:var(--bg);color:var(--fg);box-shadow:0 10px 30px rgba(0,0,0,.18);display:flex;flex-direction:column">
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 28px;gap:28px">
+<div style="display:flex;align-items:center;gap:10px;padding:8px 12px 8px 8px;border-radius:999px;background:var(--sf);border:1px solid var(--bd);align-self:flex-start"><span style="width:26px;height:26px;border-radius:50%;background:var(--sf2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">SO</span><span style="font-size:14px">Signed in as <b style="font-weight:600">@sam-okafor</b></span></div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font-size:28px;line-height:34px;font-weight:600;letter-spacing:-.02em">You're not on the list yet</div>
+<div style="font-size:15px;line-height:22px;color:var(--mu);text-wrap:pretty">domAIn is invite-only while I build it. If you'd like to try it, send me your GitHub username and I'll add you.</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="height:48px;border-radius:10px;background:var(--ac);color:var(--acfg);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">Request access</div>
+<div style="height:48px;border-radius:10px;border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:500">Use a different account</div>
+</div>
+</div>
+<div style="padding:0 28px 28px;font-size:13px;color:var(--mu)">Back to <span style="color:var(--act)">domAIn.app</span></div>
+</div>
+<div class="dv-note">No red, no error icon. Shows which account was used so the fix is obvious. Request access opens a prefilled email.</div>
+</div>
+
+<div class="dv-opt" id="1h"><div class="dv-olabel"><a class="dv-oid" href="#1h">1h</a>Chat · no sources yet</div>
+<div style="width:380px;height:780px;border-radius:28px;overflow:hidden;background:var(--bg);color:var(--fg);box-shadow:0 10px 30px rgba(0,0,0,.18);display:flex;flex-direction:column">
+<div style="height:56px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 14px;border-bottom:1px solid var(--bd)">
+<div style="width:26px;height:26px;border-radius:7px;background:var(--ac);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><div style="display:flex;gap:2px;align-items:flex-start"><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg)"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div></div><div style="width:14px;height:3px;border-radius:2px;background:var(--acfg)"></div></div>
+<div style="display:flex;gap:2px;padding:3px;background:var(--sf2);border-radius:10px"><div style="padding:6px 16px;border-radius:7px;background:var(--bg);font-size:14px;font-weight:500">Chat</div><div style="padding:6px 16px;border-radius:7px;color:var(--mu);font-size:14px;font-weight:500">Connections</div></div>
+<div style="width:32px;height:32px;border-radius:50%;background:var(--sf2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">JM</div>
+</div>
+<div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:0 24px;gap:24px">
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font-size:24px;line-height:30px;font-weight:600;letter-spacing:-.015em">Connect a source to start</div>
+<div style="font-size:15px;line-height:22px;color:var(--mu);text-wrap:pretty">domAIn answers from your code and issues, so it needs something to read first. Most repos are ready in a few minutes.</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="height:56px;padding:0 16px;border-radius:12px;background:var(--sf);border:1px solid var(--bd);display:flex;align-items:center;gap:12px"><span style="width:28px;height:28px;border-radius:8px;background:var(--sf2)"></span><div style="flex:1;display:flex;flex-direction:column"><span style="font-size:15px;font-weight:500">GitHub</span><span style="font-size:13px;color:var(--mu)">Repositories and pull requests</span></div><span style="font-size:14px;font-weight:600;color:var(--act)">Connect</span></div>
+<div style="height:56px;padding:0 16px;border-radius:12px;background:var(--sf);border:1px solid var(--bd);display:flex;align-items:center;gap:12px"><span style="width:28px;height:28px;border-radius:8px;background:var(--sf2)"></span><div style="flex:1;display:flex;flex-direction:column"><span style="font-size:15px;font-weight:500">Linear</span><span style="font-size:13px;color:var(--mu)">Issues and projects</span></div><span style="font-size:14px;font-weight:600;color:var(--act)">Connect</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:8px;padding-top:4px">
+<div style="font:500 11px 'Geist Mono',monospace;color:var(--mu);letter-spacing:.04em">ONCE CONNECTED, YOU CAN ASK</div>
+<div style="font-size:14px;color:var(--mu)">"Where do we handle session refresh?"</div>
+<div style="font-size:14px;color:var(--mu)">"Should we split the API before launch?"</div>
+</div>
+</div>
+</div>
+<div class="dv-note">No composer until a source is ready. If a source is still indexing, this becomes "acme/api is being read. Chat opens when it's ready."</div>
+</div>
+</div>
+
+<div class="dv-grp">Chat · mobile, dark</div>
+<div class="dv-opts" style="--bg:#141210;--sf:#1c1a17;--sf2:#26231f;--bd:#34302a;--fg:#f3efe9;--mu:#a8a095;--ac:#f0a24b;--acfg:#1b1206;--act:#f5b56e;--acs:rgba(240,162,75,.14);--ok:#72c493;--oks:rgba(114,196,147,.14);--er:#f08e7e;--ers:rgba(240,142,126,.13)">
+
+<div class="dv-opt" id="1i"><div class="dv-olabel"><a class="dv-oid" href="#1i">1i</a>Direct answer with citations</div>
+<div style="width:380px;height:780px;border-radius:28px;overflow:hidden;background:var(--bg);color:var(--fg);box-shadow:0 10px 30px rgba(0,0,0,.18);display:flex;flex-direction:column">
+<div style="height:56px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 14px;border-bottom:1px solid var(--bd)">
+<div style="width:26px;height:26px;border-radius:7px;background:var(--ac);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><div style="display:flex;gap:2px;align-items:flex-start"><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg)"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div></div><div style="width:14px;height:3px;border-radius:2px;background:var(--acfg)"></div></div>
+<div style="display:flex;gap:2px;padding:3px;background:var(--sf2);border-radius:10px"><div style="padding:6px 16px;border-radius:7px;background:var(--bg);font-size:14px;font-weight:500">Chat</div><div style="padding:6px 16px;border-radius:7px;color:var(--mu);font-size:14px;font-weight:500">Connections</div></div>
+<div style="width:32px;height:32px;border-radius:50%;background:var(--sf2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">JM</div>
+</div>
+<div style="flex:1;overflow:hidden;padding:20px 16px;display:flex;flex-direction:column;gap:20px">
+<div style="align-self:flex-end;max-width:82%;background:var(--sf2);padding:10px 14px;border-radius:16px 16px 4px 16px;font-size:15px;line-height:22px">Where do we handle session refresh?</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mu)"><span style="font-weight:600;color:var(--fg)">domAIn</span><span>Direct answer</span></div>
+<div style="font-size:15px;line-height:23px;text-wrap:pretty">Session refresh lives in the API's auth middleware <span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:5px;background:var(--acs);color:var(--act);font:500 11px 'Geist Mono',monospace;vertical-align:1px">1</span>. The web client calls it through <span style="font-family:'Geist Mono',monospace;font-size:13px">useSession</span>, which retries once after a 401 <span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:5px;background:var(--acs);color:var(--act);font:500 11px 'Geist Mono',monospace;vertical-align:1px">2</span>. There's an open issue about refresh loops on Safari <span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:5px;background:var(--acs);color:var(--act);font:500 11px 'Geist Mono',monospace;vertical-align:1px">3</span>.</div>
+<div style="display:flex;flex-direction:column;border:1px solid var(--bd);border-radius:12px;overflow:hidden;margin-top:4px">
+<div style="display:flex;gap:10px;align-items:baseline;padding:10px 12px;border-bottom:1px solid var(--bd)"><span style="font:500 11px 'Geist Mono',monospace;color:var(--act)">1</span><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font:12px 'Geist Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">src/auth/refresh.ts</span><span style="font-size:12px;color:var(--mu)">acme/api · lines 12–48</span></div></div>
+<div style="display:flex;gap:10px;align-items:baseline;padding:10px 12px;border-bottom:1px solid var(--bd)"><span style="font:500 11px 'Geist Mono',monospace;color:var(--act)">2</span><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font:12px 'Geist Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">hooks/useSession.ts</span><span style="font-size:12px;color:var(--mu)">acme/web · lines 30–61</span></div></div>
+<div style="display:flex;gap:10px;align-items:baseline;padding:10px 12px"><span style="font:500 11px 'Geist Mono',monospace;color:var(--act)">3</span><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font:12px 'Geist Mono',monospace">ACM-342</span><span style="font-size:12px;color:var(--mu)">Linear · Refresh loop on Safari 17</span></div></div>
+</div>
+</div>
+</div>
+<div style="flex:none;padding:10px 12px 16px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mu);padding-left:4px"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>Answering from 3 sources</div>
+<div style="display:flex;align-items:center;gap:8px;padding:6px 6px 6px 16px;background:var(--sf);border:1px solid var(--bd);border-radius:22px"><div style="flex:1;font-size:15px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ask a question</div><div style="width:34px;height:34px;border-radius:50%;background:var(--ac);color:var(--acfg);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">↑</div></div>
+</div>
+</div>
+<div class="dv-note">Citation chips are tappable and jump to the matching row. Source rows open the file or issue. The label under "domAIn" tells you the router kept this simple.</div>
+</div>
+
+<div class="dv-opt" id="1j"><div class="dv-olabel"><a class="dv-oid" href="#1j">1j</a>Council in progress</div>
+<div style="width:380px;height:780px;border-radius:28px;overflow:hidden;background:var(--bg);color:var(--fg);box-shadow:0 10px 30px rgba(0,0,0,.18);display:flex;flex-direction:column">
+<div style="height:56px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 14px;border-bottom:1px solid var(--bd)">
+<div style="width:26px;height:26px;border-radius:7px;background:var(--ac);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><div style="display:flex;gap:2px;align-items:flex-start"><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg)"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div></div><div style="width:14px;height:3px;border-radius:2px;background:var(--acfg)"></div></div>
+<div style="display:flex;gap:2px;padding:3px;background:var(--sf2);border-radius:10px"><div style="padding:6px 16px;border-radius:7px;background:var(--bg);font-size:14px;font-weight:500">Chat</div><div style="padding:6px 16px;border-radius:7px;color:var(--mu);font-size:14px;font-weight:500">Connections</div></div>
+<div style="width:32px;height:32px;border-radius:50%;background:var(--sf2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">JM</div>
+</div>
+<div style="flex:1;overflow:hidden;padding:20px 16px;display:flex;flex-direction:column;gap:20px">
+<div style="align-self:flex-end;max-width:82%;background:var(--sf2);padding:10px 14px;border-radius:16px 16px 4px 16px;font-size:15px;line-height:22px">Should we move auth to a hosted provider before the Q4 launch?</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mu)"><span style="font-weight:600;color:var(--fg)">domAIn</span><span>Council review</span><span style="margin-left:auto;font-family:'Geist Mono',monospace;font-size:12px">0:18</span></div>
+<div style="display:flex;flex-direction:column;border:1px solid var(--bd);border-radius:14px;background:var(--sf);padding:16px 14px">
+<div style="display:flex;gap:12px"><div style="display:flex;flex-direction:column;align-items:center;width:16px"><span style="width:16px;height:16px;border-radius:50%;background:var(--sf2);color:var(--mu);font-size:10px;display:flex;align-items:center;justify-content:center">✓</span><span style="flex:1;width:1px;background:var(--bd);min-height:12px"></span></div><div style="padding-bottom:12px;font-size:14px;color:var(--mu)">This looks like a strategic call. Alerted the council.</div></div>
+<div style="display:flex;gap:12px"><div style="display:flex;flex-direction:column;align-items:center;width:16px"><span style="width:16px;height:16px;border-radius:50%;background:var(--sf2);color:var(--mu);font-size:10px;display:flex;align-items:center;justify-content:center">✓</span><span style="flex:1;width:1px;background:var(--bd);min-height:12px"></span></div><div style="padding-bottom:14px;font-size:14px;color:var(--mu)">All three seats have the question.</div></div>
+<div style="display:flex;gap:12px"><div style="display:flex;flex-direction:column;align-items:center;width:16px"><span style="width:16px;height:16px;border-radius:50%;border:2px solid var(--ac);box-sizing:border-box;display:flex;align-items:center;justify-content:center"><span style="width:6px;height:6px;border-radius:50%;background:var(--ac)"></span></span><span style="flex:1;width:1px;background:var(--bd);min-height:12px"></span></div>
+<div style="flex:1;padding-bottom:14px;display:flex;flex-direction:column;gap:12px">
+<div style="font-size:14px;font-weight:500">Each seat is reviewing on its own</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;font-weight:600;width:66px">Builder</span><div style="flex:1;display:flex;gap:3px"><span style="flex:1;height:4px;border-radius:2px;background:var(--ac)"></span><span style="flex:1;height:4px;border-radius:2px;background:var(--ac)"></span><span style="flex:1;height:4px;border-radius:2px;background:var(--ac);opacity:.45"></span><span style="flex:1;height:4px;border-radius:2px;background:var(--sf2)"></span></div><span style="font-size:12px;color:var(--act);width:62px;text-align:right">Drafting</span></div>
+<div style="font-size:12.5px;line-height:18px;color:var(--mu);padding-left:74px">Comparing refresh.ts with the provider's SDK</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;font-weight:600;width:66px">Skeptic</span><div style="flex:1;display:flex;gap:3px"><span style="flex:1;height:4px;border-radius:2px;background:var(--ac)"></span><span style="flex:1;height:4px;border-radius:2px;background:var(--ac);opacity:.45"></span><span style="flex:1;height:4px;border-radius:2px;background:var(--sf2)"></span><span style="flex:1;height:4px;border-radius:2px;background:var(--sf2)"></span></div><span style="font-size:12px;color:var(--act);width:62px;text-align:right">Weighing</span></div>
+<div style="font-size:12.5px;line-height:18px;color:var(--mu);padding-left:74px">Checking 4 open auth issues in Linear</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="display:flex;align-items:center;gap:8px"><span style="font-size:13px;font-weight:600;width:66px">Customer</span><div style="flex:1;display:flex;gap:3px"><span style="flex:1;height:4px;border-radius:2px;background:var(--ok)"></span><span style="flex:1;height:4px;border-radius:2px;background:var(--ok)"></span><span style="flex:1;height:4px;border-radius:2px;background:var(--ok)"></span><span style="flex:1;height:4px;border-radius:2px;background:var(--ok)"></span></div><span style="font-size:12px;color:var(--ok);width:62px;text-align:right">Verdict in</span></div>
+<div style="font-size:12.5px;line-height:18px;color:var(--mu);padding-left:74px">Ready. Hidden until the chair speaks.</div>
+</div>
+</div></div>
+<div style="display:flex;gap:12px"><div style="display:flex;flex-direction:column;align-items:center;width:16px"><span style="width:16px;height:16px;border-radius:50%;border:1.5px solid var(--bd);box-sizing:border-box"></span><span style="flex:1;width:1px;background:var(--bd);min-height:12px"></span></div><div style="padding-bottom:14px;font-size:14px;color:var(--mu)">Chair deliberates once all three verdicts are in</div></div>
+<div style="display:flex;gap:12px"><div style="display:flex;flex-direction:column;align-items:center;width:16px"><span style="width:16px;height:16px;border-radius:50%;border:1.5px solid var(--bd);box-sizing:border-box"></span></div><div style="font-size:14px;color:var(--mu)">Recommendation</div></div>
+</div>
+</div>
+</div>
+<div style="flex:none;padding:10px 12px 16px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mu);padding-left:4px"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>Answering from 3 sources</div>
+<div style="display:flex;align-items:center;gap:8px;padding:6px 6px 6px 16px;background:var(--sf);border:1px solid var(--bd);border-radius:22px"><div style="flex:1;font-size:15px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">The council is working…</div><div style="height:34px;padding:0 14px;border-radius:17px;border:1px solid var(--bd);display:flex;align-items:center;font-size:13px;font-weight:500">Stop</div></div>
+</div>
+</div>
+<div class="dv-note">States arrive top to bottom: Alerting → Waiting on the council → three independent lanes (Reading → Weighing → Drafting → Verdict in, each with a live line of what it's looking at) → Chair deliberating → Recommendation. Current step pulses; finished steps go quiet.</div>
+</div>
+
+<div class="dv-opt" id="1k"><div class="dv-olabel"><a class="dv-oid" href="#1k">1k</a>Council result</div>
+<div style="width:380px;height:780px;border-radius:28px;overflow:hidden;background:var(--bg);color:var(--fg);box-shadow:0 10px 30px rgba(0,0,0,.18);display:flex;flex-direction:column">
+<div style="height:56px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 14px;border-bottom:1px solid var(--bd)">
+<div style="width:26px;height:26px;border-radius:7px;background:var(--ac);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><div style="display:flex;gap:2px;align-items:flex-start"><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg)"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div></div><div style="width:14px;height:3px;border-radius:2px;background:var(--acfg)"></div></div>
+<div style="display:flex;gap:2px;padding:3px;background:var(--sf2);border-radius:10px"><div style="padding:6px 16px;border-radius:7px;background:var(--bg);font-size:14px;font-weight:500">Chat</div><div style="padding:6px 16px;border-radius:7px;color:var(--mu);font-size:14px;font-weight:500">Connections</div></div>
+<div style="width:32px;height:32px;border-radius:50%;background:var(--sf2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">JM</div>
+</div>
+<div style="flex:1;overflow:hidden;padding:16px 16px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mu)"><span style="font-weight:600;color:var(--fg)">domAIn</span><span>Council review · 42s</span></div>
+<div style="display:flex;flex-direction:column;border:1px solid var(--bd);border-radius:14px;overflow:hidden">
+<div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--bd)">
+<div style="display:flex;align-items:center;gap:10px"><span style="width:26px;height:26px;border-radius:50%;background:var(--sf2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">B</span><div style="flex:1;display:flex;flex-direction:column"><span style="font-size:14px;font-weight:600">Builder</span><span style="font-size:12px;color:var(--mu)">Engineering</span></div><span style="font-size:12px;font-weight:500;padding:3px 8px;border-radius:6px;background:var(--oks);color:var(--ok)">For</span></div>
+<div style="font-size:14px;line-height:21px;color:var(--fg);text-wrap:pretty">The adapter is about two weeks of work, and refresh.ts is already isolated <span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:5px;background:var(--acs);color:var(--act);font:500 11px 'Geist Mono',monospace;vertical-align:1px">1</span>. Doing it now avoids a second migration later.</div>
+</div>
+<div style="padding:12px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bd)"><span style="width:26px;height:26px;border-radius:50%;background:var(--sf2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">S</span><div style="flex:1;display:flex;flex-direction:column;min-width:0"><span style="font-size:14px;font-weight:600">Skeptic</span><span style="font-size:12px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Too much risk six weeks out</span></div><span style="font-size:12px;font-weight:500;padding:3px 8px;border-radius:6px;background:var(--ers);color:var(--er)">Against</span></div>
+<div style="padding:12px 14px;display:flex;align-items:center;gap:10px"><span style="width:26px;height:26px;border-radius:50%;background:var(--sf2);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:600">C</span><div style="flex:1;display:flex;flex-direction:column;min-width:0"><span style="font-size:14px;font-weight:600">Customer</span><span style="font-size:12px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Only if nobody gets logged out</span></div><span style="font-size:12px;font-weight:500;padding:3px 8px;border-radius:6px;border:1px solid var(--bd)">If</span></div>
+</div>
+<div style="border-radius:14px;background:var(--acs);border:1px solid rgba(240,162,75,.35);padding:16px 14px;display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;align-items:center;gap:8px"><div style="width:20px;height:20px;border-radius:6px;background:var(--ac);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><div style="display:flex;gap:2px;align-items:flex-start"><div style="width:3px;height:3px;border-radius:50%;background:var(--acfg);margin-top:1px"></div><div style="width:3px;height:3px;border-radius:50%;background:var(--acfg)"></div><div style="width:3px;height:3px;border-radius:50%;background:var(--acfg);margin-top:1px"></div></div><div style="width:10px;height:2px;border-radius:1px;background:var(--acfg)"></div></div><span style="font:500 11px 'Geist Mono',monospace;color:var(--act);letter-spacing:.06em">CHAIR'S RECOMMENDATION</span></div>
+<div style="font-size:18px;line-height:24px;font-weight:600;letter-spacing:-.01em">Prepare now, migrate after launch.</div>
+<div style="font-size:14px;line-height:21px;text-wrap:pretty">Build the provider adapter behind a flag this sprint <span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:5px;background:rgba(240,162,75,.22);color:var(--act);font:500 11px 'Geist Mono',monospace;vertical-align:1px">1</span>, but keep the current sessions live through launch. Fix the Safari refresh loop first, since it affects the same code <span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:5px;background:rgba(240,162,75,.22);color:var(--act);font:500 11px 'Geist Mono',monospace;vertical-align:1px">3</span>.</div>
+<div style="font:12px 'Geist Mono',monospace;color:var(--mu)">3 sources · 2 of 3 seats agree</div>
+<div style="display:flex;gap:8px;margin-top:2px"><div style="flex:1;height:40px;border-radius:10px;background:var(--ac);color:var(--acfg);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600">Write this back</div><div style="height:40px;padding:0 14px;border-radius:10px;border:1px solid rgba(240,162,75,.35);display:flex;align-items:center;font-size:14px;font-weight:500">Sources</div></div>
+</div>
+</div>
+<div style="flex:none;padding:10px 12px 16px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mu);padding-left:4px"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>Answering from 3 sources</div>
+<div style="display:flex;align-items:center;gap:8px;padding:6px 6px 6px 16px;background:var(--sf);border:1px solid var(--bd);border-radius:22px"><div style="flex:1;font-size:15px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ask a follow-up</div><div style="width:34px;height:34px;border-radius:50%;background:var(--ac);color:var(--acfg);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">↑</div></div>
+</div>
+</div>
+<div class="dv-note">Seats are neutral rows with a verdict pill (For / Against / If); tap one to expand its reasoning, shown open for Builder. The chair is the only accent-tinted surface and carries the next action.</div>
+</div>
+
+<div class="dv-opt" id="1l"><div class="dv-olabel"><a class="dv-oid" href="#1l">1l</a>Write-back · plan, refined</div>
+<div style="width:380px;height:780px;border-radius:28px;overflow:hidden;background:var(--bg);color:var(--fg);box-shadow:0 10px 30px rgba(0,0,0,.18);display:flex;flex-direction:column">
+<div style="height:56px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 14px;border-bottom:1px solid var(--bd)">
+<div style="width:26px;height:26px;border-radius:7px;background:var(--ac);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><div style="display:flex;gap:2px;align-items:flex-start"><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg)"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div></div><div style="width:14px;height:3px;border-radius:2px;background:var(--acfg)"></div></div>
+<div style="display:flex;gap:2px;padding:3px;background:var(--sf2);border-radius:10px"><div style="padding:6px 16px;border-radius:7px;background:var(--bg);font-size:14px;font-weight:500">Chat</div><div style="padding:6px 16px;border-radius:7px;color:var(--mu);font-size:14px;font-weight:500">Connections</div></div>
+<div style="width:32px;height:32px;border-radius:50%;background:var(--sf2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">JM</div>
+</div>
+<div style="flex:1;overflow:hidden;padding:16px;display:flex;flex-direction:column;gap:12px">
+<div style="border:1px solid var(--bd);border-radius:14px;background:var(--sf);display:flex;flex-direction:column">
+<div style="padding:14px;display:flex;flex-direction:column;gap:4px;border-bottom:1px solid var(--bd)">
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:16px;font-weight:600">Write-back plan</span><span style="font:500 11px 'Geist Mono',monospace;padding:3px 7px;border-radius:6px;background:var(--sf2);color:var(--mu)">DRAFT 2</span></div>
+<div style="font-size:13px;line-height:19px;color:var(--mu)">Nothing is created until you confirm.</div>
+</div>
+<div style="padding:14px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="font:500 11px 'Geist Mono',monospace;color:var(--mu);letter-spacing:.04em">GITHUB · ACME/API · 1 PULL REQUEST</div>
+<div style="font-size:14px;font-weight:600">Add auth provider adapter behind a flag</div>
+<div style="font-size:13px;line-height:20px;color:var(--mu);display:flex;flex-direction:column;gap:2px"><span>· New AuthProvider interface in src/auth</span><span>· Refresh moved behind AUTH_PROVIDER</span><span>· Tests for both paths</span><span style="color:var(--act)">· Rollback checklist in the description</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="font:500 11px 'Geist Mono',monospace;color:var(--mu);letter-spacing:.04em">LINEAR · ACME · 2 ISSUES</div>
+<div style="font-size:14px;font-weight:500">Plan hosted auth migration for after launch</div>
+<div style="font-size:14px;font-weight:500">Add login monitoring before launch</div>
+</div>
+<div style="padding:10px 12px;border-radius:10px;background:var(--sf2);font-size:13px;line-height:19px;color:var(--mu)">Updated from your note: added a rollback checklist to the PR.</div>
+</div>
+<div style="padding:12px 14px;border-top:1px solid var(--bd);display:flex;gap:8px;align-items:center">
+<div style="flex:1;height:40px;padding:0 12px;border-radius:10px;border:1px solid var(--bd);background:var(--bg);display:flex;align-items:center;font-size:14px;color:var(--mu);white-space:nowrap;overflow:hidden">Suggest a change</div>
+<div style="height:40px;padding:0 14px;border-radius:10px;border:1px solid var(--bd);display:flex;align-items:center;font-size:14px;font-weight:500">Revise</div>
+</div>
+<div style="padding:0 14px 14px;display:flex;flex-direction:column;gap:8px">
+<div style="height:44px;border-radius:10px;background:var(--ac);color:var(--acfg);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600">Create 1 PR and 2 issues</div>
+<div style="height:36px;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--mu)">Discard plan</div>
+</div>
+</div>
+</div>
+<div style="flex:none;padding:10px 12px 16px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mu);padding-left:4px"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>Answering from 3 sources</div>
+<div style="display:flex;align-items:center;gap:8px;padding:6px 6px 6px 16px;background:var(--sf);border:1px solid var(--bd);border-radius:22px"><div style="flex:1;font-size:15px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ask a follow-up</div><div style="width:34px;height:34px;border-radius:50%;background:var(--ac);color:var(--acfg);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">↑</div></div>
+</div>
+</div>
+<div class="dv-note">Feedback goes in the card, not the main composer, so it's clear it edits the plan. Changed lines are highlighted after each revision. The confirm button states exactly what will be created.</div>
+</div>
+
+<div class="dv-opt" id="1m"><div class="dv-olabel"><a class="dv-oid" href="#1m">1m</a>Write-back · created</div>
+<div style="width:380px;height:780px;border-radius:28px;overflow:hidden;background:var(--bg);color:var(--fg);box-shadow:0 10px 30px rgba(0,0,0,.18);display:flex;flex-direction:column">
+<div style="height:56px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 14px;border-bottom:1px solid var(--bd)">
+<div style="width:26px;height:26px;border-radius:7px;background:var(--ac);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><div style="display:flex;gap:2px;align-items:flex-start"><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg)"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div></div><div style="width:14px;height:3px;border-radius:2px;background:var(--acfg)"></div></div>
+<div style="display:flex;gap:2px;padding:3px;background:var(--sf2);border-radius:10px"><div style="padding:6px 16px;border-radius:7px;background:var(--bg);font-size:14px;font-weight:500">Chat</div><div style="padding:6px 16px;border-radius:7px;color:var(--mu);font-size:14px;font-weight:500">Connections</div></div>
+<div style="width:32px;height:32px;border-radius:50%;background:var(--sf2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">JM</div>
+</div>
+<div style="flex:1;overflow:hidden;padding:16px;display:flex;flex-direction:column;gap:12px">
+<div style="border:1px solid var(--bd);border-radius:14px;background:var(--sf);display:flex;flex-direction:column">
+<div style="padding:14px;display:flex;flex-direction:column;gap:4px;border-bottom:1px solid var(--bd)">
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:16px;font-weight:600">Written back</span><span style="font-size:12px;font-weight:500;padding:3px 8px;border-radius:6px;background:var(--oks);color:var(--ok)">Done</span></div>
+<div style="font-size:13px;line-height:19px;color:var(--mu)">Created 1 pull request and 2 issues.</div>
+</div>
+<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--bd)"><div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font:12px 'Geist Mono',monospace;color:var(--mu)">acme/api #214</span><span style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Add auth provider adapter behind a flag</span></div><span style="font-size:14px;color:var(--act)">↗</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--bd)"><div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font:12px 'Geist Mono',monospace;color:var(--mu)">ACM-381</span><span style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Plan hosted auth migration for after launch</span></div><span style="font-size:14px;color:var(--act)">↗</span></div>
+<div style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--bd)"><div style="flex:1;display:flex;flex-direction:column;gap:2px;min-width:0"><span style="font:12px 'Geist Mono',monospace;color:var(--mu)">ACM-382</span><span style="font-size:14px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Add login monitoring before launch</span></div><span style="font-size:14px;color:var(--act)">↗</span></div>
+<div style="padding:12px 14px;font-size:13px;color:var(--mu)">Show plan</div>
+</div>
+</div>
+<div style="flex:none;padding:10px 12px 16px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mu);padding-left:4px"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>Answering from 3 sources</div>
+<div style="display:flex;align-items:center;gap:8px;padding:6px 6px 6px 16px;background:var(--sf);border:1px solid var(--bd);border-radius:22px"><div style="flex:1;font-size:15px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ask a follow-up</div><div style="width:34px;height:34px;border-radius:50%;background:var(--ac);color:var(--acfg);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">↑</div></div>
+</div>
+</div>
+<div class="dv-note">While creating, the confirm button reads "Creating…" and the plan stays visible. On success the card collapses to the links; the plan is one tap away.</div>
+</div>
+
+<div class="dv-opt" id="1n"><div class="dv-olabel"><a class="dv-oid" href="#1n">1n</a>Write-back · failed, plan kept</div>
+<div style="width:380px;height:780px;border-radius:28px;overflow:hidden;background:var(--bg);color:var(--fg);box-shadow:0 10px 30px rgba(0,0,0,.18);display:flex;flex-direction:column">
+<div style="height:56px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 14px;border-bottom:1px solid var(--bd)">
+<div style="width:26px;height:26px;border-radius:7px;background:var(--ac);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><div style="display:flex;gap:2px;align-items:flex-start"><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg)"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div></div><div style="width:14px;height:3px;border-radius:2px;background:var(--acfg)"></div></div>
+<div style="display:flex;gap:2px;padding:3px;background:var(--sf2);border-radius:10px"><div style="padding:6px 16px;border-radius:7px;background:var(--bg);font-size:14px;font-weight:500">Chat</div><div style="padding:6px 16px;border-radius:7px;color:var(--mu);font-size:14px;font-weight:500">Connections</div></div>
+<div style="width:32px;height:32px;border-radius:50%;background:var(--sf2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">JM</div>
+</div>
+<div style="flex:1;overflow:hidden;padding:16px;display:flex;flex-direction:column;gap:12px">
+<div style="border:1px solid var(--bd);border-radius:14px;background:var(--sf);display:flex;flex-direction:column">
+<div style="padding:14px;display:flex;flex-direction:column;gap:4px;border-bottom:1px solid var(--bd)">
+<div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:16px;font-weight:600">Write-back plan</span><span style="font-size:12px;font-weight:500;padding:3px 8px;border-radius:6px;background:var(--ers);color:var(--er)">Not created</span></div>
+</div>
+<div style="margin:14px 14px 0;padding:12px;border-radius:10px;background:var(--ers);display:flex;flex-direction:column;gap:10px">
+<div style="font-size:14px;line-height:21px;text-wrap:pretty">We couldn't open the pull request. domAIn lost access to acme/api. Nothing was created, so it's safe to try again.</div>
+<div style="display:flex;gap:8px"><div style="height:38px;padding:0 16px;border-radius:10px;background:var(--fg);color:var(--bg);display:flex;align-items:center;font-size:14px;font-weight:600">Retry</div><div style="height:38px;padding:0 14px;border-radius:10px;border:1px solid var(--bd);display:flex;align-items:center;font-size:14px;font-weight:500">Check GitHub access</div></div>
+</div>
+<div style="padding:14px;display:flex;flex-direction:column;gap:14px">
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="font:500 11px 'Geist Mono',monospace;color:var(--mu);letter-spacing:.04em">GITHUB · ACME/API · 1 PULL REQUEST</div>
+<div style="font-size:14px;font-weight:600">Add auth provider adapter behind a flag</div>
+<div style="font-size:13px;line-height:20px;color:var(--mu);display:flex;flex-direction:column;gap:2px"><span>· New AuthProvider interface in src/auth</span><span>· Refresh moved behind AUTH_PROVIDER</span><span>· Tests for both paths</span><span>· Rollback checklist in the description</span></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:6px">
+<div style="font:500 11px 'Geist Mono',monospace;color:var(--mu);letter-spacing:.04em">LINEAR · ACME · 2 ISSUES</div>
+<div style="font-size:14px;font-weight:500">Plan hosted auth migration for after launch</div>
+<div style="font-size:14px;font-weight:500">Add login monitoring before launch</div>
+</div>
+</div>
+</div>
+</div>
+<div style="flex:none;padding:10px 12px 16px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mu);padding-left:4px"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>Answering from 3 sources</div>
+<div style="display:flex;align-items:center;gap:8px;padding:6px 6px 6px 16px;background:var(--sf);border:1px solid var(--bd);border-radius:22px"><div style="flex:1;font-size:15px;color:var(--mu);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ask a follow-up</div><div style="width:34px;height:34px;border-radius:50%;background:var(--ac);color:var(--acfg);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">↑</div></div>
+</div>
+</div>
+<div class="dv-note">The error sits inside the card above the plan it belongs to. If only part succeeded, it lists what was created and Retry only redoes the rest.</div>
+</div>
+</div>
+
+<div class="dv-grp">Connections and global · mobile, dark</div>
+<div class="dv-opts" style="--bg:#141210;--sf:#1c1a17;--sf2:#26231f;--bd:#34302a;--fg:#f3efe9;--mu:#a8a095;--ac:#f0a24b;--acfg:#1b1206;--act:#f5b56e;--acs:rgba(240,162,75,.14);--ok:#72c493;--oks:rgba(114,196,147,.14);--er:#f08e7e;--ers:rgba(240,142,126,.13);--wa:#e8b04a">
+
+<div class="dv-opt" id="1o"><div class="dv-olabel"><a class="dv-oid" href="#1o">1o</a>Connections · all source states</div>
+<div style="width:380px;height:780px;border-radius:28px;overflow:hidden;background:var(--bg);color:var(--fg);box-shadow:0 10px 30px rgba(0,0,0,.18);display:flex;flex-direction:column">
+<div style="height:56px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 14px;border-bottom:1px solid var(--bd)">
+<div style="width:26px;height:26px;border-radius:7px;background:var(--ac);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><div style="display:flex;gap:2px;align-items:flex-start"><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg)"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div></div><div style="width:14px;height:3px;border-radius:2px;background:var(--acfg)"></div></div>
+<div style="display:flex;gap:2px;padding:3px;background:var(--sf2);border-radius:10px"><div style="padding:6px 16px;border-radius:7px;color:var(--mu);font-size:14px;font-weight:500">Chat</div><div style="padding:6px 16px;border-radius:7px;background:var(--bg);font-size:14px;font-weight:500">Connections</div></div>
+<div style="width:32px;height:32px;border-radius:50%;background:var(--sf2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">JM</div>
+</div>
+<div style="flex:1;overflow:hidden;padding:20px 16px;display:flex;flex-direction:column;gap:22px">
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="font:500 11px 'Geist Mono',monospace;color:var(--mu);letter-spacing:.06em">ACCOUNTS</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+<div style="padding:12px;border-radius:12px;background:var(--sf);border:1px solid var(--bd);display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:6px;background:var(--sf2)"></span><span style="font-size:14px;font-weight:600">GitHub</span></div><div style="font-size:12px;color:var(--mu)">Connected as @jmaker</div><div style="height:34px;border-radius:9px;border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500">Add repos</div></div>
+<div style="padding:12px;border-radius:12px;background:var(--sf);border:1px solid var(--bd);display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;gap:8px"><span style="width:22px;height:22px;border-radius:6px;background:var(--sf2)"></span><span style="font-size:14px;font-weight:600">Linear</span></div><div style="font-size:12px;color:var(--mu)">Connected to Acme</div><div style="height:34px;border-radius:9px;border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:500">Manage</div></div>
+</div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font:500 11px 'Geist Mono',monospace;color:var(--mu);letter-spacing:.06em">KNOWLEDGE SOURCES</span><span style="font-size:12px;color:var(--mu)">3 of 4 ready</span></div>
+<div style="border:1px solid var(--bd);border-radius:14px;overflow:hidden;background:var(--sf)">
+<div style="padding:12px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bd)"><div style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0"><span style="font:13px 'Geist Mono',monospace">acme/api</span><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mu)"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>Ready · updated 2h ago</span></div><span style="height:32px;padding:0 10px;border-radius:8px;display:flex;align-items:center;font-size:13px;color:var(--mu)">⋯</span></div>
+<div style="padding:12px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bd)"><div style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0"><span style="font:13px 'Geist Mono',monospace">Acme · Linear</span><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mu)"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>Ready · 412 issues</span></div><span style="height:32px;padding:0 10px;border-radius:8px;display:flex;align-items:center;font-size:13px;color:var(--mu)">⋯</span></div>
+<div style="padding:12px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--bd)"><div style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0"><span style="font:13px 'Geist Mono',monospace">acme/web</span><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--act)"><span style="width:6px;height:6px;border-radius:50%;border:1.5px solid var(--ac);box-sizing:border-box"></span>Reading files. Usually a few minutes.</span></div><span style="height:32px;padding:0 10px;border-radius:8px;display:flex;align-items:center;font-size:13px;color:var(--mu)">⋯</span></div>
+<div style="padding:12px 14px;display:flex;flex-direction:column;gap:10px;background:var(--ers)"><div style="display:flex;align-items:center;gap:10px"><div style="flex:1;display:flex;flex-direction:column;gap:3px;min-width:0"><span style="font:13px 'Geist Mono',monospace">acme/legacy</span><span style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--er)"><span style="width:6px;height:6px;border-radius:50%;background:var(--er)"></span>Can't read this repo</span></div><span style="height:32px;padding:0 10px;border-radius:8px;display:flex;align-items:center;font-size:13px;color:var(--mu)">⋯</span></div>
+<div style="font-size:13px;line-height:19px;text-wrap:pretty">domAIn lost access, probably because the repo was removed from the GitHub app. Give it access again, then refresh.</div>
+<div style="display:flex;gap:8px"><div style="height:34px;padding:0 12px;border-radius:9px;background:var(--fg);color:var(--bg);display:flex;align-items:center;font-size:13px;font-weight:600">Fix in GitHub</div><div style="height:34px;padding:0 12px;border-radius:9px;border:1px solid var(--bd);display:flex;align-items:center;font-size:13px;font-weight:500">Refresh</div></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="dv-note">Pending and indexing share one treatment: hollow amber dot plus plain wording, no bar. ⋯ opens Refresh and Remove (see <a class="dv-oid" href="#1p">1p</a>). Errors expand in place with the fix.</div>
+</div>
+
+<div class="dv-opt" id="1p"><div class="dv-olabel"><a class="dv-oid" href="#1p">1p</a>Source actions · remove confirm</div>
+<div style="width:380px;height:780px;border-radius:28px;overflow:hidden;background:var(--bg);color:var(--fg);box-shadow:0 10px 30px rgba(0,0,0,.18);display:flex;flex-direction:column;position:relative">
+<div style="height:56px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 14px;border-bottom:1px solid var(--bd);opacity:.35">
+<div style="width:26px;height:26px;border-radius:7px;background:var(--ac)"></div>
+<div style="display:flex;gap:2px;padding:3px;background:var(--sf2);border-radius:10px"><div style="padding:6px 16px;border-radius:7px;color:var(--mu);font-size:14px;font-weight:500">Chat</div><div style="padding:6px 16px;border-radius:7px;background:var(--bg);font-size:14px;font-weight:500">Connections</div></div>
+<div style="width:32px;height:32px;border-radius:50%;background:var(--sf2)"></div>
+</div>
+<div style="flex:1;background:rgba(0,0,0,.45)"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;background:var(--sf);border-top:1px solid var(--bd);border-radius:20px 20px 0 0;padding:10px 16px 20px;display:flex;flex-direction:column;gap:6px">
+<div style="width:36px;height:4px;border-radius:2px;background:var(--bd);align-self:center;margin-bottom:10px"></div>
+<div style="font:13px 'Geist Mono',monospace;color:var(--mu);padding:0 4px 6px">acme/web</div>
+<div style="height:48px;padding:0 4px;display:flex;flex-direction:column;justify-content:center"><span style="font-size:15px;font-weight:500">Refresh now</span><span style="font-size:12px;color:var(--mu)">Re-read the latest commits</span></div>
+<div style="height:1px;background:var(--bd)"></div>
+<div style="height:48px;padding:0 4px;display:flex;flex-direction:column;justify-content:center"><span style="font-size:15px;font-weight:500;color:var(--er)">Remove source</span><span style="font-size:12px;color:var(--mu)">domAIn stops using it in answers</span></div>
+<div style="margin-top:10px;padding:14px;border-radius:12px;background:var(--bg);border:1px solid var(--bd);display:flex;flex-direction:column;gap:12px">
+<div style="font-size:15px;font-weight:600">Remove acme/web?</div>
+<div style="font-size:13px;line-height:19px;color:var(--mu)">Past answers stay in chat. You can add it again any time.</div>
+<div style="display:flex;gap:8px"><div style="flex:1;height:42px;border-radius:10px;border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500">Keep</div><div style="flex:1;height:42px;border-radius:10px;background:var(--er);color:#1b0a06;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600">Remove</div></div>
+</div>
+</div>
+</div>
+<div class="dv-note">Actions in a bottom sheet keep rows clean and give 48px targets. On desktop the same items appear as a small menu.</div>
+</div>
+
+<div class="dv-opt" id="1q"><div class="dv-olabel"><a class="dv-oid" href="#1q">1q</a>Account menu</div>
+<div style="width:380px;height:780px;border-radius:28px;overflow:hidden;background:var(--bg);color:var(--fg);box-shadow:0 10px 30px rgba(0,0,0,.18);display:flex;flex-direction:column;position:relative">
+<div style="height:56px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 14px;border-bottom:1px solid var(--bd)">
+<div style="width:26px;height:26px;border-radius:7px;background:var(--ac);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><div style="display:flex;gap:2px;align-items:flex-start"><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg)"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div></div><div style="width:14px;height:3px;border-radius:2px;background:var(--acfg)"></div></div>
+<div style="display:flex;gap:2px;padding:3px;background:var(--sf2);border-radius:10px"><div style="padding:6px 16px;border-radius:7px;background:var(--bg);font-size:14px;font-weight:500">Chat</div><div style="padding:6px 16px;border-radius:7px;color:var(--mu);font-size:14px;font-weight:500">Connections</div></div>
+<div style="width:32px;height:32px;border-radius:50%;background:var(--sf2);border:1.5px solid var(--ac);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">JM</div>
+</div>
+<div style="position:absolute;top:62px;right:10px;width:260px;background:var(--sf);border:1px solid var(--bd);border-radius:14px;box-shadow:0 12px 32px rgba(0,0,0,.4);display:flex;flex-direction:column;overflow:hidden">
+<div style="padding:14px;display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--bd)"><span style="font-size:15px;font-weight:600">Jordan Maker</span><span style="font-size:13px;color:var(--mu)">@jmaker on GitHub</span></div>
+<div style="padding:12px 14px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--bd)"><span style="font-size:13px;color:var(--mu)">Appearance</span><div style="display:flex;gap:2px;padding:3px;background:var(--sf2);border-radius:9px"><div style="flex:1;padding:6px 0;text-align:center;border-radius:6px;background:var(--bg);font-size:13px;font-weight:500">System</div><div style="flex:1;padding:6px 0;text-align:center;font-size:13px;color:var(--mu)">Light</div><div style="flex:1;padding:6px 0;text-align:center;font-size:13px;color:var(--mu)">Dark</div></div></div>
+<div style="padding:12px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--bd)"><span style="font-size:13px;color:var(--mu)">Live updates</span><span style="display:flex;align-items:center;gap:6px;font-size:13px"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>Connected</span></div>
+<div style="height:48px;padding:0 14px;display:flex;align-items:center;font-size:15px;font-weight:500">Sign out</div>
+</div>
+</div>
+<div class="dv-note">Account, theme, live-connection state and sign out. "Live updates" is how the chat connection is named everywhere, so users know what it affects.</div>
+</div>
+
+<div class="dv-opt" id="1r"><div class="dv-olabel"><a class="dv-oid" href="#1r">1r</a>Chat connection states</div>
+<div style="width:380px;height:780px;border-radius:28px;overflow:hidden;background:var(--bg);color:var(--fg);box-shadow:0 10px 30px rgba(0,0,0,.18);display:flex;flex-direction:column">
+<div style="height:56px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 12px 0 14px;border-bottom:1px solid var(--bd)">
+<div style="width:26px;height:26px;border-radius:7px;background:var(--ac);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><div style="display:flex;gap:2px;align-items:flex-start"><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg)"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div></div><div style="width:14px;height:3px;border-radius:2px;background:var(--acfg)"></div></div>
+<div style="display:flex;gap:2px;padding:3px;background:var(--sf2);border-radius:10px"><div style="padding:6px 16px;border-radius:7px;background:var(--bg);font-size:14px;font-weight:500">Chat</div><div style="padding:6px 16px;border-radius:7px;color:var(--mu);font-size:14px;font-weight:500">Connections</div></div>
+<div style="width:32px;height:32px;border-radius:50%;background:var(--sf2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">JM</div>
+</div>
+<div style="flex:1;padding:20px 16px;display:flex;flex-direction:column;gap:22px;justify-content:center">
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font:500 11px 'Geist Mono',monospace;color:var(--mu);letter-spacing:.06em">CONNECTED</div><div style="padding:12px;border-radius:12px;border:1px dashed var(--bd);font-size:13px;color:var(--mu);text-align:center">Nothing shown above the composer</div></div>
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font:500 11px 'Geist Mono',monospace;color:var(--mu);letter-spacing:.06em">RECONNECTING</div><div style="padding:10px 12px;border-radius:12px;background:var(--acs);display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:19px"><span style="width:7px;height:7px;border-radius:50%;border:1.5px solid var(--ac);box-sizing:border-box;margin-top:6px;flex:none"></span><span>Reconnecting live updates. You can keep typing; your message sends when we're back.</span></div></div>
+<div style="display:flex;flex-direction:column;gap:8px"><div style="font:500 11px 'Geist Mono',monospace;color:var(--mu);letter-spacing:.06em">OFFLINE</div><div style="padding:10px 12px;border-radius:12px;background:var(--sf2);display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:19px"><span style="width:7px;height:7px;border-radius:50%;background:var(--mu);margin-top:6px;flex:none"></span><span style="flex:1">You're offline. Past answers are still here. We'll reconnect when your network is back.</span><span style="font-weight:600;color:var(--act)">Retry</span></div></div>
+</div>
+<div style="flex:none;padding:10px 12px 16px;border-top:1px solid var(--bd);display:flex;flex-direction:column;gap:8px">
+<div style="padding:8px 12px;border-radius:10px;background:var(--acs);display:flex;gap:8px;align-items:center;font-size:12.5px"><span style="width:6px;height:6px;border-radius:50%;border:1.5px solid var(--ac);box-sizing:border-box"></span>Reconnecting live updates…</div>
+<div style="display:flex;align-items:center;gap:8px;padding:6px 6px 6px 16px;background:var(--sf);border:1px solid var(--bd);border-radius:22px"><div style="flex:1;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">What changed in billing this week</div><div style="width:34px;height:34px;border-radius:50%;background:var(--sf2);color:var(--mu);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">↑</div></div>
+</div>
+</div>
+<div class="dv-note">The strip replaces the sources line above the composer, right where the consequence lands. Reconnecting waits 2s before showing so brief blips stay invisible.</div>
+</div>
+</div>
+
+<div class="dv-grp">Desktop · light</div>
+<div class="dv-opts" style="--bg:#faf8f5;--sf:#ffffff;--sf2:#f2eee8;--bd:#e5dfd6;--fg:#1d1a16;--mu:#6a6258;--ac:#ec9a45;--acfg:#1b1206;--act:#a4560c;--acs:rgba(236,154,69,.14);--ok:#2f8a55;--oks:rgba(47,138,85,.1);--er:#c2412f;--ers:rgba(194,65,47,.09)">
+
+<div class="dv-opt" id="1s"><div class="dv-olabel"><a class="dv-oid" href="#1s">1s</a>Landing · desktop</div>
+<div style="width:1200px;border-radius:14px;overflow:hidden;background:var(--bg);color:var(--fg);box-shadow:0 10px 30px rgba(0,0,0,.1);border:1px solid rgba(0,0,0,.06)">
+<div style="height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 48px">
+<div style="display:flex;align-items:center;gap:10px"><div style="width:28px;height:28px;border-radius:8px;background:var(--ac);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><div style="display:flex;gap:2px;align-items:flex-start"><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg)"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div></div><div style="width:15px;height:3px;border-radius:2px;background:var(--acfg)"></div></div><span style="font-size:18px;font-weight:600;letter-spacing:-.02em">domAIn</span></div>
+<div style="display:flex;align-items:center;gap:24px;font-size:14px"><span style="color:var(--mu)">How it works</span><div style="height:36px;padding:0 16px;border-radius:10px;background:var(--fg);color:var(--bg);display:flex;align-items:center;font-weight:600">Open app</div></div>
+</div>
+<div style="display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:64px;padding:72px 48px 80px;align-items:center">
+<div style="display:flex;flex-direction:column;gap:24px">
+<div style="font-size:60px;line-height:62px;font-weight:600;letter-spacing:-.035em;text-wrap:balance">Three seats debate. <span style="color:var(--act)">One recommendation ships.</span></div>
+<div style="font-size:18px;line-height:28px;color:var(--mu);max-width:520px;text-wrap:pretty">domAIn reads your GitHub repos and Linear workspace. Ask a quick question and get an answer with sources. Ask a hard one and three reviewers weigh in, then a chair gives you one recommendation you can turn into a pull request and issues.</div>
+<div style="display:flex;gap:12px;margin-top:4px"><div style="height:48px;padding:0 22px;border-radius:10px;background:var(--ac);color:var(--acfg);display:flex;align-items:center;font-size:16px;font-weight:600">Open domAIn</div><div style="height:48px;padding:0 20px;border-radius:10px;border:1px solid var(--bd);display:flex;align-items:center;font-size:16px;font-weight:500">See how it works</div></div>
+</div>
+<div style="padding:22px;border-radius:18px;background:var(--sf);border:1px solid var(--bd);box-shadow:0 20px 50px rgba(60,40,10,.08);display:flex;flex-direction:column;gap:12px">
+<div style="align-self:flex-end;background:var(--sf2);padding:10px 14px;border-radius:14px 14px 4px 14px;font-size:14px">Should we move auth before the Q4 launch?</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+<div style="padding:12px;border-radius:12px;border:1px solid var(--bd);display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:600">Builder</span><span style="align-self:flex-start;font-size:12px;padding:2px 8px;border-radius:6px;background:var(--oks);color:var(--ok)">For</span></div>
+<div style="padding:12px;border-radius:12px;border:1px solid var(--bd);display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:600">Skeptic</span><span style="align-self:flex-start;font-size:12px;padding:2px 8px;border-radius:6px;background:var(--ers);color:var(--er)">Against</span></div>
+<div style="padding:12px;border-radius:12px;border:1px solid var(--bd);display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;font-weight:600">Customer</span><span style="align-self:flex-start;font-size:12px;padding:2px 8px;border-radius:6px;border:1px solid var(--bd)">If</span></div>
+</div>
+<div style="padding:16px;border-radius:12px;background:var(--acs);display:flex;flex-direction:column;gap:6px"><span style="font:500 11px 'Geist Mono',monospace;color:var(--act);letter-spacing:.06em">CHAIR'S RECOMMENDATION</span><span style="font-size:17px;font-weight:600">Prepare now, migrate after launch.</span></div>
+<div style="display:flex;gap:8px;font:12px 'Geist Mono',monospace;color:var(--mu)"><span style="padding:4px 8px;border-radius:6px;background:var(--sf2)">acme/api #214</span><span style="padding:4px 8px;border-radius:6px;background:var(--sf2)">ACM-381</span><span style="padding:4px 8px;border-radius:6px;background:var(--sf2)">ACM-382</span></div>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:32px;padding:48px;border-top:1px solid var(--bd)">
+<div style="display:flex;flex-direction:column;gap:8px"><span style="font:500 13px 'Geist Mono',monospace;color:var(--act)">01</span><span style="font-size:17px;font-weight:600">Connect your sources</span><span style="font-size:15px;line-height:23px;color:var(--mu)">Pick the repos and Linear workspace domAIn can read.</span></div>
+<div style="display:flex;flex-direction:column;gap:8px"><span style="font:500 13px 'Geist Mono',monospace;color:var(--act)">02</span><span style="font-size:17px;font-weight:600">Ask in one chat</span><span style="font-size:15px;line-height:23px;color:var(--mu)">Simple questions get a direct answer. Big decisions go to the council.</span></div>
+<div style="display:flex;flex-direction:column;gap:8px"><span style="font:500 13px 'Geist Mono',monospace;color:var(--act)">03</span><span style="font-size:17px;font-weight:600">Ship the decision</span><span style="font-size:15px;line-height:23px;color:var(--mu)">Review the plan, adjust it, and domAIn opens the PR and issues for you.</span></div>
+</div>
+<div style="padding:20px 48px;border-top:1px solid var(--bd);display:flex;justify-content:space-between;font-size:13px;color:var(--mu)"><span style="display:flex;align-items:center;gap:8px"><span style="width:7px;height:7px;border-radius:50%;background:var(--ok)"></span>All systems operational</span><span>© 2026 domAIn</span></div>
+</div>
+</div>
+
+<div class="dv-opt" id="1t"><div class="dv-olabel"><a class="dv-oid" href="#1t">1t</a>Chat · desktop, council result</div>
+<div style="width:1200px;height:800px;border-radius:14px;overflow:hidden;background:var(--bg);color:var(--fg);box-shadow:0 10px 30px rgba(0,0,0,.1);border:1px solid rgba(0,0,0,.06);display:flex;flex-direction:column">
+<div style="height:60px;flex:none;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 24px;border-bottom:1px solid var(--bd);background:var(--sf)">
+<div style="display:flex;align-items:center;gap:10px"><div style="width:26px;height:26px;border-radius:7px;background:var(--ac);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px"><div style="display:flex;gap:2px;align-items:flex-start"><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg)"></div><div style="width:4px;height:4px;border-radius:50%;background:var(--acfg);margin-top:1px"></div></div><div style="width:14px;height:3px;border-radius:2px;background:var(--acfg)"></div></div><span style="font-size:16px;font-weight:600;letter-spacing:-.02em">domAIn</span></div>
+<div style="display:flex;gap:2px;padding:3px;background:var(--sf2);border-radius:10px"><div style="padding:6px 18px;border-radius:7px;background:var(--sf);font-size:14px;font-weight:500;box-shadow:0 1px 2px rgba(0,0,0,.08)">Chat</div><div style="padding:6px 18px;border-radius:7px;color:var(--mu);font-size:14px;font-weight:500">Connections</div></div>
+<div style="display:flex;justify-content:flex-end"><div style="width:32px;height:32px;border-radius:50%;background:var(--sf2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600">JM</div></div>
+</div>
+<div style="flex:1;overflow:hidden;display:flex;justify-content:center;padding:28px 24px">
+<div style="width:100%;max-width:760px;display:flex;flex-direction:column;gap:16px">
+<div style="align-self:flex-end;max-width:70%;background:var(--sf2);padding:10px 14px;border-radius:16px 16px 4px 16px;font-size:15px;line-height:22px">Should we move auth to a hosted provider before the Q4 launch?</div>
+<div style="display:flex;align-items:center;gap:8px;font-size:13px;color:var(--mu)"><span style="font-weight:600;color:var(--fg)">domAIn</span><span>Council review · 42s</span></div>
+<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px">
+<div style="padding:14px;border-radius:14px;background:var(--sf);border:1px solid var(--bd);display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;flex-direction:column"><span style="font-size:14px;font-weight:600">Builder</span><span style="font-size:12px;color:var(--mu)">Engineering</span></div><span style="font-size:12px;font-weight:500;padding:3px 8px;border-radius:6px;background:var(--oks);color:var(--ok)">For</span></div><div style="font-size:13.5px;line-height:20px;text-wrap:pretty">The adapter is about two weeks of work and refresh.ts is already isolated <span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:5px;background:var(--acs);color:var(--act);font:500 11px 'Geist Mono',monospace;vertical-align:1px">1</span>.</div></div>
+<div style="padding:14px;border-radius:14px;background:var(--sf);border:1px solid var(--bd);display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;flex-direction:column"><span style="font-size:14px;font-weight:600">Skeptic</span><span style="font-size:12px;color:var(--mu)">Risk</span></div><span style="font-size:12px;font-weight:500;padding:3px 8px;border-radius:6px;background:var(--ers);color:var(--er)">Against</span></div><div style="font-size:13.5px;line-height:20px;text-wrap:pretty">Four open auth issues and six weeks to launch. A migration now puts login at risk <span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:5px;background:var(--acs);color:var(--act);font:500 11px 'Geist Mono',monospace;vertical-align:1px">3</span>.</div></div>
+<div style="padding:14px;border-radius:14px;background:var(--sf);border:1px solid var(--bd);display:flex;flex-direction:column;gap:10px"><div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;flex-direction:column"><span style="font-size:14px;font-weight:600">Customer</span><span style="font-size:12px;color:var(--mu)">Product</span></div><span style="font-size:12px;font-weight:500;padding:3px 8px;border-radius:6px;border:1px solid var(--bd)">If</span></div><div style="font-size:13.5px;line-height:20px;text-wrap:pretty">Worth it for SSO, but only if nobody gets logged out during the switch <span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:5px;background:var(--acs);color:var(--act);font:500 11px 'Geist Mono',monospace;vertical-align:1px">2</span>.</div></div>
+</div>
+<div style="border-radius:14px;background:var(--acs);border:1px solid rgba(236,154,69,.4);padding:20px;display:flex;flex-direction:column;gap:10px">
+<span style="font:500 11px 'Geist Mono',monospace;color:var(--act);letter-spacing:.06em">CHAIR'S RECOMMENDATION</span>
+<div style="font-size:20px;line-height:26px;font-weight:600;letter-spacing:-.01em">Prepare now, migrate after launch.</div>
+<div style="font-size:15px;line-height:23px;max-width:640px;text-wrap:pretty">Build the provider adapter behind a flag this sprint <span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:5px;background:rgba(236,154,69,.25);color:var(--act);font:500 11px 'Geist Mono',monospace;vertical-align:1px">1</span>, but keep the current sessions live through launch. Fix the Safari refresh loop first, since it affects the same code <span style="display:inline-flex;align-items:center;justify-content:center;min-width:18px;height:18px;padding:0 5px;border-radius:5px;background:rgba(236,154,69,.25);color:var(--act);font:500 11px 'Geist Mono',monospace;vertical-align:1px">3</span>.</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap;font:12px 'Geist Mono',monospace;color:var(--mu)"><span style="padding:4px 8px;border-radius:6px;background:var(--sf)">1 · acme/api src/auth/refresh.ts</span><span style="padding:4px 8px;border-radius:6px;background:var(--sf)">2 · acme/web hooks/useSession.ts</span><span style="padding:4px 8px;border-radius:6px;background:var(--sf)">3 · ACM-342</span></div>
+<div style="display:flex;gap:8px;margin-top:4px"><div style="height:38px;padding:0 16px;border-radius:10px;background:var(--ac);color:var(--acfg);display:flex;align-items:center;font-size:14px;font-weight:600">Write this back</div><div style="height:38px;padding:0 14px;border-radius:10px;border:1px solid rgba(236,154,69,.45);display:flex;align-items:center;font-size:14px;font-weight:500">Ask a follow-up</div></div>
+</div>
+</div>
+</div>
+<div style="flex:none;display:flex;justify-content:center;padding:12px 24px 20px">
+<div style="width:100%;max-width:760px;display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--mu);padding-left:4px"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>Answering from 3 sources</div>
+<div style="display:flex;align-items:center;gap:8px;padding:8px 8px 8px 18px;background:var(--sf);border:1px solid var(--bd);border-radius:24px;box-shadow:0 2px 8px rgba(60,40,10,.05)"><div style="flex:1;font-size:15px;color:var(--mu)">Ask about your code, issues or a decision</div><div style="width:36px;height:36px;border-radius:50%;background:var(--ac);color:var(--acfg);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600">↑</div></div>
+</div>
+</div>
+</div>
+<div class="dv-note">Same bar and switch as mobile. With more width the seats sit side by side, fully expanded, and the longer placeholder fits.</div>
+</div>
+</div>
+
+<p class="dv-next">Try next: "make the council progress in <a class="dv-oid" href="#1j">1j</a> animate" · "show the mobile screens in light mode" · "explore a different chair treatment than <a class="dv-oid" href="#1k">1k</a>"</p>
+</section>
+</x-dc>
+</body>
+</html>

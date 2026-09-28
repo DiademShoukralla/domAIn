@@ -12,7 +12,7 @@ from domain.auth.browser_session import create_browser_session, revoke_browser_s
 from domain.config import get_settings
 from domain.db.models import User
 from domain.main import app
-from domain.schemas.chat import ChatIntent
+from domain.schemas.chat import ChatIntent, ResponseKind
 
 
 def _ws_headers(**extra: str) -> dict[str, str]:
@@ -42,7 +42,9 @@ async def test_websocket_accepts_session_cookie_with_allowed_origin(db_session) 
             ) as ws:
                 await ws.send_text(json.dumps({"session_id": str(uuid4()), "content": "ping"}))
                 frame = json.loads(await ws.receive_text())
-                assert frame["role"] == "assistant"
+                assert frame["classified_intent"] == ChatIntent.GREETING.value
+                assert frame["response_kind"] == ResponseKind.DIRECT_ANSWER.value
+                assert frame["id"]
 
 
 @pytest.mark.asyncio
@@ -123,4 +125,6 @@ async def test_websocket_still_accepts_api_key_with_allowed_origin(db_session) -
             ) as ws:
                 await ws.send_text(json.dumps({"session_id": str(uuid4()), "content": "ping"}))
                 frame = json.loads(await ws.receive_text())
-                assert frame["role"] == "assistant"
+                assert frame["classified_intent"] == ChatIntent.GREETING.value
+                assert frame["response_kind"] == ResponseKind.DIRECT_ANSWER.value
+                assert frame["id"]

@@ -9,6 +9,9 @@ domain.didi.build {
 	handle /oauth* {
 		reverse_proxy domain-api:8080
 	}
+	handle /auth* {
+		reverse_proxy domain-api:8080
+	}
 	handle /connections* {
 		reverse_proxy domain-api:8080
 	}

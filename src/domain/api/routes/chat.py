@@ -3,11 +3,11 @@ import json
 import logging
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
-from domain.auth.api_key import validate_api_key
+from domain.auth.actor import resolve_actor, websocket_origin_allowed
 from domain.auth.middleware import get_actor
 from domain.chat.service import get_session_messages, process_message
 from domain.council.status import STATUS_QUEUE_SENTINEL, StatusQueue
@@ -20,15 +20,6 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/chat", tags=["chat"])
 
 
-async def _resolve_actor_from_api_key(api_key: str) -> ActorContext | None:
-    async with async_session_factory() as session:
-        identity = await validate_api_key(session, api_key)
-    if identity is None:
-        return None
-    user_id, project_id = identity
-    return ActorContext(user_id=user_id, project_id=project_id)
-
-
 async def _cleanup_pipeline_task(task: asyncio.Task[ChatResponse] | None) -> None:
     if task is not None and not task.done():
         task.cancel()
@@ -39,17 +30,18 @@ async def _cleanup_pipeline_task(task: asyncio.Task[ChatResponse] | None) -> Non
 
 
 @router.websocket("/ws")
-async def chat_websocket(
-    websocket: WebSocket,
-    api_key: str | None = Query(default=None),
-) -> None:
-    if not api_key:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Missing API key")
+async def chat_websocket(websocket: WebSocket) -> None:
+    origin = websocket.headers.get("origin")
+    if not websocket_origin_allowed(origin):
+        await websocket.close(
+            code=status.WS_1008_POLICY_VIOLATION,
+            reason="Origin not allowed",
+        )
         return
 
-    actor = await _resolve_actor_from_api_key(api_key)
+    actor = await resolve_actor(websocket)
     if actor is None:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid API key")
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Not authenticated")
         return
 
     await websocket.accept()

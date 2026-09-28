@@ -96,8 +96,12 @@ async def test_websocket_streams_status_frames_before_final_response(db_session)
         transport = ASGIWebSocketTransport(app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             async with aconnect_ws(
-                f"http://test/chat/ws?api_key={settings.bootstrap_api_key}",
+                "http://test/chat/ws",
                 client,
+                headers={
+                    "Origin": "http://test",
+                    "X-API-Key": settings.bootstrap_api_key,
+                },
             ) as ws:
                 await ws.send_text(
                     json.dumps({"session_id": str(session_id), "content": "Review this proposal"})

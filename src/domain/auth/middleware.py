@@ -4,9 +4,8 @@ from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
-from domain.auth.api_key import validate_api_key
+from domain.auth.actor import resolve_actor
 from domain.config import get_settings
-from domain.db.session import async_session_factory
 from domain.schemas.common import ActorContext
 
 PUBLIC_PATHS = {
@@ -15,10 +14,11 @@ PUBLIC_PATHS = {
     "/docs",
     "/openapi.json",
     "/redoc",
-    "/oauth/github/authorize",
     "/oauth/github/callback",
-    "/oauth/linear/authorize",
     "/oauth/linear/callback",
+    "/auth/github/login",
+    "/auth/github/callback",
+    "/auth/access-denied",
 }
 
 
@@ -30,21 +30,15 @@ class AuthMiddleware(BaseHTTPMiddleware):
             return await call_next(request)
 
         path = request.url.path.rstrip("/") or "/"
-        if path in PUBLIC_PATHS or path.startswith("/oauth/"):
+        if path in PUBLIC_PATHS:
             request.state.actor = ActorContext(user_id=get_settings().default_user_id)
             return await call_next(request)
 
-        api_key = request.headers.get("X-API-Key")
-        if not api_key:
-            return JSONResponse(status_code=401, content={"detail": "Missing X-API-Key header"})
+        actor = await resolve_actor(request)
+        if actor is None:
+            return JSONResponse(status_code=401, content={"detail": "Not authenticated"})
 
-        async with async_session_factory() as session:
-            identity = await validate_api_key(session, api_key)
-        if identity is None:
-            return JSONResponse(status_code=401, content={"detail": "Invalid API key"})
-
-        user_id, project_id = identity
-        request.state.actor = ActorContext(user_id=user_id, project_id=project_id)
+        request.state.actor = actor
         return await call_next(request)
 
 

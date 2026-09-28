@@ -7,10 +7,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from domain.db.models import (
     APIKey,
+    BrowserSession,
     ChatMessage,
     Chunk,
     Connection,
     KnowledgeSource,
+    User,
     WriteBackProposal,
 )
 from domain.db.session import async_session_factory
@@ -30,5 +32,7 @@ async def db_session(apply_migrations: None) -> AsyncGenerator[AsyncSession, Non
         await session.execute(delete(Chunk))
         await session.execute(delete(KnowledgeSource))
         await session.execute(delete(Connection))
+        await session.execute(delete(BrowserSession))
+        await session.execute(delete(User))
         await session.execute(delete(APIKey))
         await session.commit()

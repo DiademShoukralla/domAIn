@@ -33,8 +33,12 @@ async def test_chat_history_persists_messages(db_session) -> None:
         transport = ASGIWebSocketTransport(app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             async with aconnect_ws(
-                f"http://test/chat/ws?api_key={settings.bootstrap_api_key}",
+                "http://test/chat/ws",
                 client,
+                headers={
+                    "Origin": "http://test",
+                    "X-API-Key": settings.bootstrap_api_key,
+                },
             ) as ws:
                 await ws.send_text(
                     json.dumps({"session_id": str(session_id), "content": "Hello there"})
@@ -63,12 +67,15 @@ async def test_chat_history_persists_messages(db_session) -> None:
 def test_websocket_rejects_missing_api_key() -> None:
     client = TestClient(app)
     with pytest.raises(Exception):
-        with client.websocket_connect("/chat/ws"):
+        with client.websocket_connect("/chat/ws", headers={"Origin": "http://test"}):
             pass
 
 
 def test_websocket_rejects_invalid_api_key() -> None:
     client = TestClient(app)
     with pytest.raises(Exception):
-        with client.websocket_connect("/chat/ws?api_key=not-a-real-key"):
+        with client.websocket_connect(
+            "/chat/ws",
+            headers={"Origin": "http://test", "X-API-Key": "not-a-real-key"},
+        ):
             pass

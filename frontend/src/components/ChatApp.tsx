@@ -19,7 +19,16 @@ import { useChatWebSocket } from "../hooks/useChatWebSocket";
 import { ChatThread } from "./ChatThread";
 import { Composer } from "./ChatMessage";
 
-export function ChatApp({ apiKey }: { apiKey: string }) {
+import type { AuthUser } from "../lib/auth";
+import { SignOutButton } from "./SignOutButton";
+
+export function ChatApp({
+  user,
+  onSignOut,
+}: {
+  user: AuthUser | null;
+  onSignOut: () => void;
+}) {
   const [sessionId] = useState(getOrCreateSessionId);
   const [items, setItems] = useState<ThreadItem[]>([]);
   const [readySourceCount, setReadySourceCount] = useState<number | null>(null);
@@ -29,27 +38,27 @@ export function ChatApp({ apiKey }: { apiKey: string }) {
 
   const activeCouncilIdRef = useRef<string | null>(null);
 
-  const refreshSourceCount = useCallback(async (key: string) => {
+  const refreshSourceCount = useCallback(async () => {
     try {
-      const count = await fetchSourceCount(key);
+      const count = await fetchSourceCount();
       setReadySourceCount(count);
     } catch {
       setReadySourceCount(0);
     }
   }, []);
 
-  const loadHistory = useCallback(async (key: string) => {
-    const history = await fetchChatHistory(sessionId, key);
+  const loadHistory = useCallback(async () => {
+    const history = await fetchChatHistory(sessionId);
     setItems(historyToThreadItems(history.messages));
     setHistoryLoaded(true);
   }, [sessionId]);
 
   useEffect(() => {
-    void Promise.all([loadHistory(apiKey), refreshSourceCount(apiKey)]).catch((loadError) => {
+    void Promise.all([loadHistory(), refreshSourceCount()]).catch((loadError) => {
       setError(loadError instanceof Error ? loadError.message : "Failed to load chat history.");
       setHistoryLoaded(true);
     });
-  }, [apiKey, loadHistory, refreshSourceCount]);
+  }, [loadHistory, refreshSourceCount]);
 
   const handleWriteBackProposalUpdate = useCallback(
     (messageId: string, proposal: WriteBackProposalOut) => {
@@ -90,8 +99,7 @@ export function ChatApp({ apiKey }: { apiKey: string }) {
   );
 
   const { connected, sendMessage } = useChatWebSocket({
-    apiKey,
-    enabled: Boolean(apiKey),
+    enabled: true,
     onStatus: handleIncomingStatus,
     onError: setError,
   });
@@ -151,7 +159,7 @@ export function ChatApp({ apiKey }: { apiKey: string }) {
     } finally {
       activeCouncilIdRef.current = null;
       setAwaitingResponse(false);
-      void refreshSourceCount(apiKey);
+      void refreshSourceCount();
     }
   };
 
@@ -172,6 +180,12 @@ export function ChatApp({ apiKey }: { apiKey: string }) {
             </a>
           </nav>
           <p className="caption">{connected ? "Connected" : "Connecting"}</p>
+          {user ? (
+            <p className="caption dom-header__user" title={`@${user.login}`}>
+              @{user.login}
+            </p>
+          ) : null}
+          <SignOutButton onSignedOut={onSignOut} />
         </div>
       </header>
 
@@ -179,11 +193,7 @@ export function ChatApp({ apiKey }: { apiKey: string }) {
         {!historyLoaded ? (
           <p className="caption">Loading chat history</p>
         ) : (
-          <ChatThread
-            items={items}
-            apiKey={apiKey}
-            onWriteBackProposalUpdate={handleWriteBackProposalUpdate}
-          />
+          <ChatThread items={items} onWriteBackProposalUpdate={handleWriteBackProposalUpdate} />
         )}
       </section>
 

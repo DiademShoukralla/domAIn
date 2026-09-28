@@ -4,17 +4,14 @@ import { ChatMessage } from "./ChatMessage";
 
 interface ChatThreadProps {
   items: ThreadItem[];
-  apiKey: string;
   onWriteBackProposalUpdate: (messageId: string, proposal: WriteBackProposalOut) => void;
 }
 
 function CouncilThreadBlock({
   item,
-  apiKey,
   onWriteBackProposalUpdate,
 }: {
   item: Extract<ThreadItem, { kind: "council" }>;
-  apiKey: string;
   onWriteBackProposalUpdate: (messageId: string, proposal: WriteBackProposalOut) => void;
 }) {
   if (item.phase === "pending") {
@@ -41,7 +38,6 @@ function CouncilThreadBlock({
         content={item.content}
         councilDecision={item.councilDecision}
         messageId={item.id}
-        apiKey={apiKey}
         writeBackProposal={item.writeBackProposal}
         onWriteBackProposalUpdate={(proposal) => onWriteBackProposalUpdate(item.id, proposal)}
       />
@@ -49,7 +45,7 @@ function CouncilThreadBlock({
   );
 }
 
-export function ChatThread({ items, apiKey, onWriteBackProposalUpdate }: ChatThreadProps) {
+export function ChatThread({ items, onWriteBackProposalUpdate }: ChatThreadProps) {
   return (
     <div className="dom-chat-thread">
       {items.map((item) => {
@@ -73,7 +69,6 @@ export function ChatThread({ items, apiKey, onWriteBackProposalUpdate }: ChatThr
           <CouncilThreadBlock
             key={item.id}
             item={item}
-            apiKey={apiKey}
             onWriteBackProposalUpdate={onWriteBackProposalUpdate}
           />
         );

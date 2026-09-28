@@ -10,7 +10,6 @@ import type { WriteBackProposalOut } from "../types/chat";
 interface WriteBackCardProps {
   messageId: string;
   proposal: WriteBackProposalOut | null;
-  apiKey: string;
   onProposalUpdate: (proposal: WriteBackProposalOut) => void;
 }
 
@@ -32,7 +31,6 @@ function SuccessCheckIcon() {
 export function WriteBackCard({
   messageId,
   proposal,
-  apiKey,
   onProposalUpdate,
 }: WriteBackCardProps) {
   const [feedback, setFeedback] = useState("");
@@ -45,7 +43,7 @@ export function WriteBackCard({
     setProposing(true);
     setError(null);
     try {
-      const created = await proposeWriteBack(apiKey, messageId);
+      const created = await proposeWriteBack(messageId);
       onProposalUpdate(created);
     } catch (proposeError) {
       setError(
@@ -63,7 +61,7 @@ export function WriteBackCard({
     setRefining(true);
     setError(null);
     try {
-      const refined = await refineWriteBackProposal(apiKey, proposal.id, feedback.trim());
+      const refined = await refineWriteBackProposal(proposal.id, feedback.trim());
       onProposalUpdate(refined);
       setFeedback("");
     } catch (refineError) {
@@ -82,7 +80,7 @@ export function WriteBackCard({
     setExecuting(true);
     setError(null);
     try {
-      const confirmed = await confirmWriteBackProposal(apiKey, proposal.id);
+      const confirmed = await confirmWriteBackProposal(proposal.id);
       onProposalUpdate(confirmed);
     } catch (confirmError) {
       setError(

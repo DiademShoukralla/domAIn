@@ -1,5 +1,4 @@
 const SESSION_KEY = "domain.chat.session_id";
-const API_KEY_KEY = "domain.api_key";
 
 export function getOrCreateSessionId(): string {
   const existing = localStorage.getItem(SESSION_KEY);
@@ -11,14 +10,7 @@ export function getOrCreateSessionId(): string {
   return sessionId;
 }
 
-export function getStoredApiKey(): string {
-  return localStorage.getItem(API_KEY_KEY) ?? import.meta.env.VITE_API_KEY ?? "";
-}
-
-export function setStoredApiKey(apiKey: string): void {
-  localStorage.setItem(API_KEY_KEY, apiKey.trim());
-}
-
-export function clearStoredApiKey(): void {
-  localStorage.removeItem(API_KEY_KEY);
+/** Removes legacy API key storage from older builds. */
+export function clearLegacyApiKeyStorage(): void {
+  localStorage.removeItem("domain.api_key");
 }

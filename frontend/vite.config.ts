@@ -39,6 +39,8 @@ export default defineConfig({
       "/sources": "http://localhost:8000",
       "/connections": "http://localhost:8000",
       "/oauth": "http://localhost:8000",
+      "/auth": "http://localhost:8000",
+      "/write-back-proposals": "http://localhost:8000",
       "/health": "http://localhost:8000",
     },
   },

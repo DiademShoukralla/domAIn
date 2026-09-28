@@ -20,7 +20,6 @@ interface ChatMessageProps {
   councilDecision?: CouncilDecision;
   pending?: CouncilPendingState;
   messageId?: string;
-  apiKey?: string;
   writeBackProposal?: WriteBackProposalOut | null;
   onWriteBackProposalUpdate?: (proposal: WriteBackProposalOut) => void;
 }
@@ -99,7 +98,6 @@ export function ChatMessage({
   councilDecision,
   pending,
   messageId,
-  apiKey,
   writeBackProposal = null,
   onWriteBackProposalUpdate,
 }: ChatMessageProps) {
@@ -139,7 +137,7 @@ export function ChatMessage({
   }
 
   if (voice === "chair" && councilDecision) {
-    const showWriteBack = Boolean(messageId && apiKey && onWriteBackProposalUpdate);
+    const showWriteBack = Boolean(messageId && onWriteBackProposalUpdate);
 
     return (
       <article className="dom-chair-block">
@@ -152,7 +150,6 @@ export function ChatMessage({
           <footer className="dom-chair-block__footer">
             <WriteBackCard
               messageId={messageId!}
-              apiKey={apiKey!}
               proposal={writeBackProposal ?? null}
               onProposalUpdate={onWriteBackProposalUpdate!}
             />

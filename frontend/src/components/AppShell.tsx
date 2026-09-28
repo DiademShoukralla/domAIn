@@ -1,58 +1,97 @@
-import { useState } from "react";
-import { getStoredApiKey, setStoredApiKey } from "../lib/session";
+import { useEffect, useState } from "react";
+import type { AuthUser } from "../lib/auth";
+import { fetchAuthUser } from "../lib/auth";
 import { resolveAppView } from "../lib/routing";
+import { clearLegacyApiKeyStorage } from "../lib/session";
 import { ChatApp } from "./ChatApp";
 import { ConnectionsView } from "./ConnectionsView";
+import { NotAllowedScreen } from "./NotAllowedScreen";
+import { SignInScreen } from "./SignInScreen";
+
+type AuthState = "loading" | "signed-out" | "signed-in";
 
 export function AppShell() {
-  const [apiKey, setApiKey] = useState(getStoredApiKey);
-  const [apiKeyDraft, setApiKeyDraft] = useState(getStoredApiKey);
-  const [error, setError] = useState<string | null>(null);
+  const [authState, setAuthState] = useState<AuthState>("loading");
+  const [user, setUser] = useState<AuthUser | null>(null);
   const view = resolveAppView();
 
-  const handleSaveApiKey = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    const trimmed = apiKeyDraft.trim();
-    if (!trimmed) {
-      setError("Enter an API key to connect.");
+  useEffect(() => {
+    clearLegacyApiKeyStorage();
+  }, []);
+
+  useEffect(() => {
+    if (view === "not-allowed") {
+      setAuthState("signed-out");
       return;
     }
-    setStoredApiKey(trimmed);
-    setApiKey(trimmed);
-    setError(null);
+
+    let cancelled = false;
+    void fetchAuthUser()
+      .then((authUser) => {
+        if (cancelled) {
+          return;
+        }
+        if (!authUser) {
+          setUser(null);
+          setAuthState("signed-out");
+          return;
+        }
+        setUser(authUser);
+        setAuthState("signed-in");
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setUser(null);
+          setAuthState("signed-out");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [view]);
+
+  const handleSignedOut = () => {
+    setUser(null);
+    setAuthState("signed-out");
+    window.location.assign(`${import.meta.env.BASE_URL}`);
   };
 
-  if (!apiKey) {
+  if (view === "not-allowed") {
     return (
-      <main className="dom-app">
-        <section className="dom-setup layout-thread">
-          <h1 className="dom-setup__title">Connect to domAIn</h1>
-          <p className="body">Enter your API key to open the chat session.</p>
-          <form className="dom-setup__form" onSubmit={handleSaveApiKey}>
-            <label className="label" htmlFor="api-key">
-              API key
-            </label>
-            <input
-              id="api-key"
-              className="dom-setup__input"
-              type="password"
-              autoComplete="off"
-              value={apiKeyDraft}
-              onChange={(event) => setApiKeyDraft(event.target.value)}
-            />
-            <button type="submit" className="dom-btn dom-btn--primary">
-              Connect
-            </button>
-          </form>
-          {error ? <p className="dom-error caption">{error}</p> : null}
-        </section>
+      <main className="dom-app dom-app--auth">
+        <NotAllowedScreen />
+      </main>
+    );
+  }
+
+  if (authState === "loading") {
+    return (
+      <main className="dom-app dom-app--auth">
+        <div className="dom-auth">
+          <div className="dom-auth__main">
+            <p className="dom-auth__lede">Loading…</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  if (authState === "signed-out") {
+    return (
+      <main className="dom-app dom-app--auth">
+        <SignInScreen />
       </main>
     );
   }
 
   return (
     <main className="dom-app">
-      {view === "connections" ? <ConnectionsView apiKey={apiKey} /> : <ChatApp apiKey={apiKey} />}
+      {view === "connections" ? (
+        <ConnectionsView user={user} onSignOut={handleSignedOut} />
+      ) : (
+        <ChatApp user={user} onSignOut={handleSignedOut} />
+      )}
     </main>
   );
 }

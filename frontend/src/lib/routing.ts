@@ -1,7 +1,10 @@
-export type AppView = "chat" | "connections";
+export type AppView = "chat" | "connections" | "not-allowed";
 
 export function resolveAppView(pathname: string = window.location.pathname): AppView {
   const normalized = pathname.replace(/\/+$/, "");
+  if (normalized.endsWith("/not-allowed")) {
+    return "not-allowed";
+  }
   return normalized.endsWith("/connections") ? "connections" : "chat";
 }
 
@@ -22,7 +25,13 @@ export function parseConnectionCallback(
 
 export function appPath(view: AppView = "chat"): string {
   const base = import.meta.env.BASE_URL.replace(/\/$/, "");
-  return view === "connections" ? `${base}/connections` : `${base}/`;
+  if (view === "connections") {
+    return `${base}/connections`;
+  }
+  if (view === "not-allowed") {
+    return `${base}/not-allowed`;
+  }
+  return `${base}/`;
 }
 
 export function providerDisplayName(provider: string): string {

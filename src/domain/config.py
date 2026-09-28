@@ -1,4 +1,4 @@
-from functools import lru_cache
+from functools import cached_property, lru_cache
 from uuid import UUID
 
 from pydantic import Field
@@ -17,6 +17,16 @@ class Settings(BaseSettings):
     token_encryption_key: str = ""
 
     bootstrap_api_key: str = "dev-api-key-change-me"
+
+    github_app_oauth_client_id: str = ""
+    github_app_oauth_client_secret: str = ""
+    github_auth_redirect_uri: str = "http://localhost:8000/auth/github/callback"
+    auth_allowed_github_ids: str = ""
+    session_secret: str = "dev-session-secret-change-me"
+    session_cookie_name: str = "domain_session"
+    session_ttl_days: int = 30
+    auth_display_cookie_name: str = "domain_auth_display"
+    ws_allowed_origins: str = ""
 
     github_app_id: str = ""
     github_app_slug: str = ""
@@ -44,6 +54,21 @@ class Settings(BaseSettings):
     retrieval_answer_model: str = "anthropic:claude-sonnet-5"
     persona_model: str = "anthropic:claude-sonnet-5"
     council_chair_model: str = "anthropic:claude-sonnet-5"
+
+    @cached_property
+    def allowed_github_ids(self) -> frozenset[int]:
+        raw = self.auth_allowed_github_ids.strip()
+        if not raw:
+            return frozenset()
+        return frozenset(int(part.strip()) for part in raw.split(",") if part.strip())
+
+    @cached_property
+    def ws_allowed_origin_set(self) -> frozenset[str]:
+        raw = self.ws_allowed_origins.strip()
+        if raw:
+            return frozenset(part.strip().rstrip("/") for part in raw.split(",") if part.strip())
+        base = self.app_base_url.rstrip("/")
+        return frozenset({base})
 
 
 @lru_cache

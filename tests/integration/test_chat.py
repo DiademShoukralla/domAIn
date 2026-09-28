@@ -6,7 +6,6 @@ import pytest
 from httpx import AsyncClient
 from httpx_ws import aconnect_ws
 from httpx_ws.transport import ASGIWebSocketTransport
-from starlette.testclient import TestClient
 
 from domain.auth.api_key import ensure_bootstrap_api_key
 from domain.config import get_settings
@@ -33,8 +32,12 @@ async def test_chat_history_persists_messages(db_session) -> None:
         transport = ASGIWebSocketTransport(app)
         async with AsyncClient(transport=transport, base_url="http://test") as client:
             async with aconnect_ws(
-                f"http://test/chat/ws?api_key={settings.bootstrap_api_key}",
+                "http://test/chat/ws",
                 client,
+                headers={
+                    "Origin": "http://test",
+                    "X-API-Key": settings.bootstrap_api_key,
+                },
             ) as ws:
                 await ws.send_text(
                     json.dumps({"session_id": str(session_id), "content": "Hello there"})
@@ -60,15 +63,27 @@ async def test_chat_history_persists_messages(db_session) -> None:
             assert payload["messages"][1]["write_back_proposal"] is None
 
 
-def test_websocket_rejects_missing_api_key() -> None:
-    client = TestClient(app)
-    with pytest.raises(Exception):
-        with client.websocket_connect("/chat/ws"):
-            pass
+@pytest.mark.asyncio
+async def test_websocket_rejects_missing_api_key() -> None:
+    transport = ASGIWebSocketTransport(app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        with pytest.raises(Exception):
+            async with aconnect_ws(
+                "http://test/chat/ws",
+                client,
+                headers={"Origin": "http://test"},
+            ):
+                pass
 
 
-def test_websocket_rejects_invalid_api_key() -> None:
-    client = TestClient(app)
-    with pytest.raises(Exception):
-        with client.websocket_connect("/chat/ws?api_key=not-a-real-key"):
-            pass
+@pytest.mark.asyncio
+async def test_websocket_rejects_invalid_api_key() -> None:
+    transport = ASGIWebSocketTransport(app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        with pytest.raises(Exception):
+            async with aconnect_ws(
+                "http://test/chat/ws",
+                client,
+                headers={"Origin": "http://test", "X-API-Key": "not-a-real-key"},
+            ):
+                pass

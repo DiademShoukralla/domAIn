@@ -399,7 +399,7 @@ Date: 2026-09-28
 **Rationale:**
 
 1. One GitHub App registration; repo indexing/write-back and human identity stay aligned under the same product surface in GitHub settings.
-2. Login needs only `read:user` once per sign-in to read numeric `id` and `login`; domAIn then issues its **own** opaque server-side session — no long-lived GitHub user token stored for browser auth.
+2. Login needs only `read:user` once per sign-in to read numeric `id` and `login` (GitHub Apps do not honor classic OAuth scope strings; user profile access comes from the GitHub App’s **Account permissions**, e.g. **Email addresses: Read-only** or equivalent profile permission configured in app settings). domAIn then issues its **own** opaque server-side session — no long-lived GitHub user token stored for browser auth.
 3. Route and callback separation avoids mixing `installation_id` (connections) with `code` (login).
 4. A second OAuth App adds credentials and documentation burden without loosening the allowlist or changing connection semantics.
 
@@ -438,7 +438,7 @@ GitHub App installation routes (`/oauth/github/authorize`, `/oauth/github/callba
 | `GITHUB_APP_OAUTH_CLIENT_SECRET` | Generated under the same GitHub App |
 | `GITHUB_AUTH_REDIRECT_URI` | User OAuth callback, e.g. `https://domain.didi.build/auth/github/callback` |
 | `AUTH_ALLOWED_GITHUB_IDS` | Allowlisted GitHub numeric user IDs |
-| `SESSION_SECRET` | Signing session tokens, OAuth login `state`, and short-lived not-allowed display cookie |
+| `SESSION_SECRET` | HMAC signing for browser-login OAuth `state` and the short-lived not-allowed display cookie (session tokens are random and stored hashed, not signed) |
 | `SESSION_COOKIE_NAME` | Default `domain_session` |
 | `SESSION_TTL_DAYS` | Default `30` |
 | `WS_ALLOWED_ORIGINS` | Comma-separated; defaults to `APP_BASE_URL` origin in production |

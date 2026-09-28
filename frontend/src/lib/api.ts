@@ -5,59 +5,65 @@ import type {
   WriteBackProposalOut,
 } from "../types/chat";
 import type { KnowledgeSource, KnowledgeSourceListResponse } from "../types/sources";
+import { humanizeApiError } from "./authErrors";
 
-function apiHeaders(apiKey: string): HeadersInit {
+function apiHeaders(extra: HeadersInit = {}): HeadersInit {
   return {
-    "X-API-Key": apiKey,
     Accept: "application/json",
+    ...extra,
   };
 }
 
 async function parseJson<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const detail = await response.text();
-    throw new Error(detail || `Request failed with status ${response.status}`);
+    throw new Error(humanizeApiError(response.status, detail));
   }
   return (await response.json()) as T;
 }
 
-export async function fetchChatHistory(
-  sessionId: string,
-  apiKey: string,
-): Promise<ChatHistoryResponse> {
+const fetchOptions: RequestInit = {
+  credentials: "include",
+};
+
+export async function fetchChatHistory(sessionId: string): Promise<ChatHistoryResponse> {
   const response = await fetch(`/chat/sessions/${sessionId}/messages`, {
-    headers: apiHeaders(apiKey),
+    ...fetchOptions,
+    headers: apiHeaders(),
   });
   return parseJson<ChatHistoryResponse>(response);
 }
 
-export async function fetchSourceCount(apiKey: string): Promise<number> {
-  const payload = await fetchSources(apiKey);
+export async function fetchSourceCount(): Promise<number> {
+  const payload = await fetchSources();
   return payload.sources.filter((source) => source.status === "ready").length;
 }
 
-export async function fetchSources(apiKey: string): Promise<KnowledgeSourceListResponse> {
+export async function fetchSources(): Promise<KnowledgeSourceListResponse> {
   const response = await fetch("/sources", {
-    headers: apiHeaders(apiKey),
+    ...fetchOptions,
+    headers: apiHeaders(),
   });
   return parseJson<KnowledgeSourceListResponse>(response);
 }
 
-export async function deleteSource(apiKey: string, sourceId: string): Promise<void> {
+export async function deleteSource(sourceId: string): Promise<void> {
   const response = await fetch(`/sources/${sourceId}`, {
+    ...fetchOptions,
     method: "DELETE",
-    headers: apiHeaders(apiKey),
+    headers: apiHeaders(),
   });
   if (!response.ok) {
     const detail = await response.text();
-    throw new Error(detail || `Request failed with status ${response.status}`);
+    throw new Error(humanizeApiError(response.status, detail));
   }
 }
 
-export async function refreshSource(apiKey: string, sourceId: string): Promise<KnowledgeSource> {
+export async function refreshSource(sourceId: string): Promise<KnowledgeSource> {
   const response = await fetch(`/sources/${sourceId}/refresh`, {
+    ...fetchOptions,
     method: "POST",
-    headers: apiHeaders(apiKey),
+    headers: apiHeaders(),
   });
   return parseJson<KnowledgeSource>(response);
 }
@@ -66,40 +72,35 @@ export function historyToThreadItems(messages: ChatMessageOut[]): ThreadItem[] {
   return messages.flatMap((message) => threadItemsFromHistoryMessage(message));
 }
 
-export async function proposeWriteBack(
-  apiKey: string,
-  messageId: string,
-): Promise<WriteBackProposalOut> {
+export async function proposeWriteBack(messageId: string): Promise<WriteBackProposalOut> {
   const response = await fetch(`/chat/messages/${messageId}/write-back`, {
+    ...fetchOptions,
     method: "POST",
-    headers: apiHeaders(apiKey),
+    headers: apiHeaders(),
   });
   return parseJson<WriteBackProposalOut>(response);
 }
 
 export async function refineWriteBackProposal(
-  apiKey: string,
   proposalId: string,
   feedback: string,
 ): Promise<WriteBackProposalOut> {
   const response = await fetch(`/write-back-proposals/${proposalId}`, {
+    ...fetchOptions,
     method: "PATCH",
-    headers: {
-      ...apiHeaders(apiKey),
+    headers: apiHeaders({
       "Content-Type": "application/json",
-    },
+    }),
     body: JSON.stringify({ feedback }),
   });
   return parseJson<WriteBackProposalOut>(response);
 }
 
-export async function confirmWriteBackProposal(
-  apiKey: string,
-  proposalId: string,
-): Promise<WriteBackProposalOut> {
+export async function confirmWriteBackProposal(proposalId: string): Promise<WriteBackProposalOut> {
   const response = await fetch(`/write-back-proposals/${proposalId}/confirm`, {
+    ...fetchOptions,
     method: "POST",
-    headers: apiHeaders(apiKey),
+    headers: apiHeaders(),
   });
   return parseJson<WriteBackProposalOut>(response);
 }

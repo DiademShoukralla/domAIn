@@ -117,6 +117,19 @@
   --layout-icon-lg: 20px;
   --layout-focus-offset: 2px;
 
+  /* Auth screens (redesign 1f/1g — shared with DIDI-440) */
+  --color-auth-bg: #141210;
+  --color-auth-surface: #1c1a17;
+  --color-auth-surface-2: #26231f;
+  --color-auth-border: #34302a;
+  --color-auth-text: #f3efe9;
+  --color-auth-muted: #a8a095;
+  --color-auth-accent: #f0a24b;
+  --color-auth-accent-fg: #1b1206;
+  --color-auth-accent-text: #f5b56e;
+  --radius-auth-button: 10px;
+  --radius-auth-mark: 12px;
+
   /* ── Radii ── */
   --radius-xs: 4px;
   --radius-sm: 6px;

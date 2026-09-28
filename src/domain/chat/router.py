@@ -36,7 +36,6 @@ async def route_message(
             session_id,
             message,
             actor,
-            db,
             status_queue=status_queue,
         )
     if resolved_intent == ChatIntent.LINEAR_READ:

@@ -168,7 +168,6 @@ async def test_run_council_emits_waiting_on_council_before_graph() -> None:
             session_id=session_id,
             message="Review this proposal",
             actor=actor,
-            db=AsyncMock(),
             status_queue=queue,
         )
 

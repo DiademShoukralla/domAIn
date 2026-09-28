@@ -71,9 +71,9 @@ async def chat_websocket(
                             actor=actor,
                             status_queue=status_queue,
                         )
-                    except asyncio.CancelledError:
-                        await session.invalidate()
-                        raise
+                    finally:
+                        if session.in_transaction():
+                            await session.rollback()
 
             try:
                 active_pipeline_task = asyncio.create_task(run_message_pipeline())

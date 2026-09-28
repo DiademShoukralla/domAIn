@@ -1,7 +1,5 @@
 from uuid import UUID
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from domain.council.graph import council_graph
 from domain.council.status import StatusQueue, emit_supervisor_status
 from domain.schemas.chat import ChatIntent, ResponseKind, RoutedChatResponse
@@ -12,7 +10,6 @@ async def run_council(
     session_id: UUID,
     message: str,
     actor: ActorContext,
-    db: AsyncSession,
     *,
     status_queue: StatusQueue | None = None,
 ) -> RoutedChatResponse:

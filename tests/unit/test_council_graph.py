@@ -103,7 +103,6 @@ async def test_run_council_returns_council_result_response() -> None:
             session_id=session_id,
             message="Review this proposal",
             actor=actor,
-            db=AsyncMock(),
         )
 
     assert response.response_kind == ResponseKind.COUNCIL_RESULT

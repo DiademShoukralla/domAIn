@@ -33,6 +33,7 @@ async def _persist_message(
     response_kind: ResponseKind | None = None,
     citations: list[Citation] | None = None,
     council_decision: CouncilDecision | None = None,
+    refresh: bool = True,
 ) -> ChatMessage:
     record = ChatMessage(
         session_id=session_id,
@@ -47,7 +48,8 @@ async def _persist_message(
     )
     db.add(record)
     await db.commit()
-    await db.refresh(record)
+    if refresh:
+        await db.refresh(record)
     return record
 
 
@@ -96,6 +98,7 @@ async def process_message(
         role=ChatRole.USER,
         content=content,
         classified_intent=resolved_intent,
+        refresh=False,
     )
 
     try:

@@ -12,6 +12,7 @@ from sqlalchemy import text
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
 from domain.auth.api_key import ensure_bootstrap_api_key
+from domain.chat.service import process_message
 from domain.config import get_settings
 from domain.db.session import async_session_factory
 from domain.main import app
@@ -20,6 +21,7 @@ from domain.schemas.common import ActorContext, CouncilDecision, PersonaOpinion,
 
 
 async def _idle_in_transaction_count() -> int:
+    app_name = get_settings().database_application_name
     async with async_session_factory() as session:
         result = await session.execute(
             text(
@@ -27,10 +29,12 @@ async def _idle_in_transaction_count() -> int:
                 SELECT count(*)
                 FROM pg_stat_activity
                 WHERE datname = current_database()
+                  AND application_name = :app_name
                   AND state = 'idle in transaction'
                   AND pid != pg_backend_pid()
                 """
-            )
+            ),
+            {"app_name": app_name},
         )
         return int(result.scalar_one())
 
@@ -55,7 +59,6 @@ async def test_websocket_disconnect_cleans_up_pipeline_db_session(db_session) ->
         council_session_id: object,
         message: str,
         actor: ActorContext,
-        db: object,
         *,
         status_queue: asyncio.Queue | None = None,
     ):
@@ -124,6 +127,58 @@ async def test_websocket_disconnect_cleans_up_pipeline_db_session(db_session) ->
                 )
                 first_status = json.loads(await ws.receive_text())
                 assert first_status["status"] == "alerting_council"
+
+    await db_session.commit()
+    await _wait_for_no_idle_transactions()
+    assert await _idle_in_transaction_count() == 0
+
+
+@pytest.mark.asyncio
+async def test_pipeline_task_cancelled_mid_council_releases_db_connection(db_session) -> None:
+    session_id = uuid4()
+    settings = get_settings()
+    await ensure_bootstrap_api_key(db_session)
+    actor = ActorContext(user_id=settings.default_user_id, project_id=None)
+
+    async def hang_council(
+        council_session_id: object,
+        message: str,
+        council_actor: ActorContext,
+        *,
+        status_queue: asyncio.Queue | None = None,
+    ) -> None:
+        if status_queue is not None:
+            await status_queue.put(
+                ChatStatusUpdate(
+                    session_id=council_session_id,
+                    scope="supervisor",
+                    status="council_deliberating",
+                )
+            )
+        await asyncio.Event().wait()
+
+    async def run_pipeline() -> None:
+        async with async_session_factory() as session:
+            try:
+                await process_message(
+                    db=session,
+                    session_id=session_id,
+                    content="Review this proposal",
+                    actor=actor,
+                    intent=ChatIntent.STRATEGIC_SESSION,
+                )
+            finally:
+                if session.in_transaction():
+                    await session.rollback()
+
+    with (
+        patch("domain.chat.router.run_council", side_effect=hang_council),
+    ):
+        task = asyncio.create_task(run_pipeline())
+        await asyncio.sleep(0.15)
+        task.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await task
 
     await db_session.commit()
     await _wait_for_no_idle_transactions()

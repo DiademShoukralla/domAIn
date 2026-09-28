@@ -377,6 +377,72 @@ When `needs_roadmap_item` is true, the handler resolves the actor's single acces
 
 Execution runs GitHub first (when needed), then Linear (when needed). If any step fails after earlier steps succeeded, **`proposal.status` stays `"proposed"`** so the operator can retry the same confirm call. We accept as a stated v1 tradeoff that a rare partial failure may leave an orphaned GitHub branch with no PR — recoverable manually; distributed rollback is not worth the complexity at this scale.
 
+## Browser auth spike: GitHub App user OAuth vs separate OAuth App
+
+Date: 2026-09-28
+
+**Question (DIDI-434):** Can the existing domAIn **GitHub App** authorize human users for browser login, so repo installation and sign-in share one GitHub registration? Or is a separate classic **GitHub OAuth App** cleaner?
+
+### Findings
+
+| Approach | How it works today / would work |
+|----------|----------------------------------|
+| **GitHub App (repo connection)** | Installation flow only: `GET /oauth/github/authorize` → `https://github.com/apps/<slug>/installations/new`, callback `GET /oauth/github/callback` with `installation_id` + signed `state`. Auth uses **app JWT** + **installation access tokens** — no user OAuth code exchange. Documented in the GitHub App section above; user-authorization callback was intentionally unused. |
+| **GitHub App (user identity)** | Every GitHub App has an OAuth **Client ID** and can generate a **Client secret** under *Identifying and authorizing users*. Standard web flow: redirect to `https://github.com/login/oauth/authorize` with that Client ID, scope `read:user`, callback with `code`, exchange at `POST https://github.com/login/oauth/access_token`, then `GET /user` for **numeric** `id` and `login`. This is [documented user-to-server OAuth for GitHub Apps](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-user-access-token-for-a-github-app). **Not** the same URL or query params as the installation Setup URL. |
+| **“Request user authorization (OAuth) during installation”** | Optional GitHub App setting that prompts for user OAuth **at install time**. Conflates “connect repos” with “sign in to domAIn” and does not replace a dedicated `/auth/github/login` entry point. **Leave disabled.** |
+| **Separate OAuth App** | Second GitHub developer registration (Client ID/secret) used only for `read:user` login. Installation flow unchanged on the GitHub App. Extra secret rotation and “which client ID is this?” operational overhead. |
+
+### Decision
+
+**Use the existing GitHub App’s OAuth Client ID + Client secret for browser sign-in.** Keep the installation flow on `/oauth/github/*` unchanged. Add a **separate** user OAuth callback on `/auth/github/callback` (not the installation Setup URL).
+
+**Rationale:**
+
+1. One GitHub App registration; repo indexing/write-back and human identity stay aligned under the same product surface in GitHub settings.
+2. Login needs only `read:user` once per sign-in to read numeric `id` and `login`; domAIn then issues its **own** opaque server-side session — no long-lived GitHub user token stored for browser auth.
+3. Route and callback separation avoids mixing `installation_id` (connections) with `code` (login).
+4. A second OAuth App adds credentials and documentation burden without loosening the allowlist or changing connection semantics.
+
+**Rejected:** Separate OAuth App — viable, but redundant given GitHub App user OAuth is first-class and installation auth remains app-JWT-based.
+
+## Browser authentication: GitHub identity, allowlist, opaque sessions
+
+Date: 2026-09-28
+
+Supersedes **browser** use of API keys described in *Authentication model* (2026-09-23). **Machine callers** continue to use `X-API-Key` and `validate_api_key()` unchanged.
+
+### Identity and authorization
+
+- **Sign-in provider:** GitHub only (Linear remains a *connection*, not a login).
+- **Identity key:** GitHub **numeric user ID** (`/user` → `id`), never username.
+- **Authorization:** Environment allowlist `AUTH_ALLOWED_GITHUB_IDS` (comma-separated integers). Non-allowlisted users complete GitHub OAuth but **no** domAIn session is created; they see an invite-only page (design `1g` in `docs/design/domAIn-redesign.dc.html`). Display `@handle` on that page via a **short-lived signed cookie** (not a query param).
+- **Sessions:** Random opaque token, **SHA-256 hash** stored in `sessions`; `HttpOnly; Secure; SameSite=Lax` cookie on `/`. Configurable TTL (default 30 days). Revocation via `sessions.revoked_at` and `POST /auth/logout`. **No JWTs** — single backend + Postgres; sessions are revocable without a denylist.
+- **Actor resolution:** One resolver: session cookie first, then `X-API-Key` → `ActorContext`. HTTP middleware and **WebSocket handshake** both call it (`BaseHTTPMiddleware` does not run on WS).
+- **WebSocket:** Cookie auth requires **Origin** allowlist (default production `https://domain.didi.build`) on `/chat/ws` to block cross-site cookie-driven WS hijacking.
+
+### HTTP routes (login)
+
+| Method | Path | Purpose |
+|--------|------|---------|
+| `GET` | `/auth/github/login` | Redirect to GitHub user OAuth with signed `state` |
+| `GET` | `/auth/github/callback` | Verify `state`, exchange `code`, allowlist check, create session or not-allowed redirect |
+| `POST` | `/auth/logout` | Revoke session row, clear cookie |
+
+GitHub App installation routes (`/oauth/github/authorize`, `/oauth/github/callback`) are unchanged.
+
+### New configuration (summary)
+
+| Variable | Purpose |
+|----------|---------|
+| `GITHUB_APP_OAUTH_CLIENT_ID` | App “Client ID” from GitHub App settings (user OAuth; not the numeric App ID used for JWT `iss`) |
+| `GITHUB_APP_OAUTH_CLIENT_SECRET` | Generated under the same GitHub App |
+| `GITHUB_AUTH_REDIRECT_URI` | User OAuth callback, e.g. `https://domain.didi.build/auth/github/callback` |
+| `AUTH_ALLOWED_GITHUB_IDS` | Allowlisted GitHub numeric user IDs |
+| `SESSION_SECRET` | Signing session tokens, OAuth login `state`, and short-lived not-allowed display cookie |
+| `SESSION_COOKIE_NAME` | Default `domain_session` |
+| `SESSION_TTL_DAYS` | Default `30` |
+| `WS_ALLOWED_ORIGINS` | Comma-separated; defaults to `APP_BASE_URL` origin in production |
+
 ## Changelog
 
 | Date | Change |
@@ -388,3 +454,5 @@ Execution runs GitHub first (when needed), then Linear (when needed). If any ste
 | 2026-09-23 | Pass 3a: `persona_model` setting for council persona nodes; independent from chair model. |
 | 2026-09-23 | Pass 3c-1: write-back proposal/refinement state machine, `WriteBackPlan` schema, supervisor-model classification, citation-frequency doc selection. |
 | 2026-09-23 | Pass 3c-2: write-back confirm endpoint, GitHub branch/commit/PR execution, Linear issue create/update, target-repo resolution, partial-failure tradeoff. |
+| 2026-09-28 | DIDI-434 spike: browser login uses existing GitHub App user OAuth (`read:user`); separate `/auth/github/*` callback; installation flow unchanged. |
+| 2026-09-28 | Browser authentication: GitHub allowlist, opaque session cookies, cookie+API-key `ActorContext` resolver, WS Origin check; API keys retained for machines. |

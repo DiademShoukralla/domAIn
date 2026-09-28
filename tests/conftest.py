@@ -9,3 +9,4 @@ os.environ.setdefault(
     "DATABASE_URL",
     "postgresql+asyncpg://domain:domain@localhost:5432/domain",
 )
+os.environ.setdefault("DATABASE_APPLICATION_NAME", "domain-pytest")

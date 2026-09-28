@@ -47,7 +47,6 @@ async def test_websocket_streams_status_frames_before_final_response(db_session)
         session_id: object,
         message: str,
         actor: ActorContext,
-        db: object,
         *,
         status_queue: asyncio.Queue | None = None,
     ):

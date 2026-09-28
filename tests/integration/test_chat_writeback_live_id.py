@@ -58,7 +58,6 @@ async def test_live_council_response_id_allows_immediate_write_back(db_session) 
         session_id: object,
         message: str,
         actor: ActorContext,
-        db: object,
         *,
         status_queue: object | None = None,
     ):

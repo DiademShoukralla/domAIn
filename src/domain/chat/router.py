@@ -1,7 +1,5 @@
 from uuid import UUID
 
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from domain.chat.classifier import classify_intent
 from domain.chat.handlers import (
     handle_greeting,
@@ -11,6 +9,7 @@ from domain.chat.handlers import (
 )
 from domain.council import run_council
 from domain.council.status import StatusQueue, emit_supervisor_status
+from domain.db.session import async_session_factory
 from domain.schemas.chat import ChatIntent, RoutedChatResponse
 from domain.schemas.common import ActorContext
 
@@ -19,7 +18,6 @@ async def route_message(
     session_id: UUID,
     message: str,
     actor: ActorContext,
-    db: AsyncSession,
     intent: ChatIntent | None = None,
     *,
     status_queue: StatusQueue | None = None,
@@ -29,14 +27,14 @@ async def route_message(
     if resolved_intent == ChatIntent.GREETING:
         return await handle_greeting(session_id, message)
     if resolved_intent == ChatIntent.SIMPLE_RETRIEVAL:
-        return await handle_simple_retrieval(session_id, message, actor, db)
+        async with async_session_factory() as db:
+            return await handle_simple_retrieval(session_id, message, actor, db)
     if resolved_intent == ChatIntent.STRATEGIC_SESSION:
         await emit_supervisor_status(status_queue, session_id, "alerting_council")
         return await run_council(
             session_id,
             message,
             actor,
-            db,
             status_queue=status_queue,
         )
     if resolved_intent == ChatIntent.LINEAR_READ:
@@ -44,4 +42,5 @@ async def route_message(
     if resolved_intent == ChatIntent.LINEAR_WRITE:
         return await handle_linear_write(session_id, message)
 
-    return await handle_simple_retrieval(session_id, message, actor, db)
+    async with async_session_factory() as db:
+        return await handle_simple_retrieval(session_id, message, actor, db)

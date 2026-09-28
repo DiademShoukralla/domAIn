@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     default_user_id: UUID = Field(default=UUID("00000000-0000-4000-8000-000000000001"))
 
     database_url: str = "postgresql+asyncpg://domain:domain@localhost:5432/domain"
+    database_application_name: str = "domain"
 
     token_encryption_key: str = ""
 

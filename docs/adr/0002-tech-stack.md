@@ -388,3 +388,4 @@ Execution runs GitHub first (when needed), then Linear (when needed). If any ste
 | 2026-09-23 | Pass 3a: `persona_model` setting for council persona nodes; independent from chair model. |
 | 2026-09-23 | Pass 3c-1: write-back proposal/refinement state machine, `WriteBackPlan` schema, supervisor-model classification, citation-frequency doc selection. |
 | 2026-09-23 | Pass 3c-2: write-back confirm endpoint, GitHub branch/commit/PR execution, Linear issue create/update, target-repo resolution, partial-failure tradeoff. |
+| 2026-09-28 | **DB session hygiene:** do not hold an open SQLAlchemy transaction across long LLM or network awaits (e.g. council deliberation). Persist with `commit` and avoid unnecessary `refresh` before those awaits; roll back in pipeline `finally` on WebSocket task cancellation. Postgres `application_name` is set from config for observability and scoped integration checks. |

@@ -7,6 +7,7 @@ from domain.chat.classifier import classify_intent
 from domain.chat.router import route_message
 from domain.council.status import STATUS_QUEUE_SENTINEL, StatusQueue
 from domain.db.models import ChatMessage, WriteBackProposal
+from domain.db.session import async_session_factory
 from domain.schemas.chat import (
     ChatIntent,
     ChatMessageOut,
@@ -33,6 +34,7 @@ async def _persist_message(
     response_kind: ResponseKind | None = None,
     citations: list[Citation] | None = None,
     council_decision: CouncilDecision | None = None,
+    refresh: bool = True,
 ) -> ChatMessage:
     record = ChatMessage(
         session_id=session_id,
@@ -47,7 +49,8 @@ async def _persist_message(
     )
     db.add(record)
     await db.commit()
-    await db.refresh(record)
+    if refresh:
+        await db.refresh(record)
     return record
 
 
@@ -79,7 +82,6 @@ def _to_message_out(
 
 
 async def process_message(
-    db: AsyncSession,
     session_id: UUID,
     content: str,
     actor: ActorContext,
@@ -89,21 +91,22 @@ async def process_message(
 ) -> ChatResponse:
     resolved_intent = intent or await classify_intent(content)
 
-    await _persist_message(
-        db,
-        session_id=session_id,
-        actor=actor,
-        role=ChatRole.USER,
-        content=content,
-        classified_intent=resolved_intent,
-    )
+    async with async_session_factory() as persist_db:
+        await _persist_message(
+            persist_db,
+            session_id=session_id,
+            actor=actor,
+            role=ChatRole.USER,
+            content=content,
+            classified_intent=resolved_intent,
+            refresh=False,
+        )
 
     try:
         response = await route_message(
             session_id,
             content,
             actor,
-            db,
             intent=resolved_intent,
             status_queue=status_queue,
         )
@@ -111,17 +114,18 @@ async def process_message(
         if status_queue is not None:
             await status_queue.put(STATUS_QUEUE_SENTINEL)
 
-    assistant_record = await _persist_message(
-        db,
-        session_id=session_id,
-        actor=actor,
-        role=ChatRole.ASSISTANT,
-        content=response.content,
-        classified_intent=response.classified_intent,
-        response_kind=response.response_kind,
-        citations=response.citations,
-        council_decision=response.council_decision,
-    )
+    async with async_session_factory() as persist_db:
+        assistant_record = await _persist_message(
+            persist_db,
+            session_id=session_id,
+            actor=actor,
+            role=ChatRole.ASSISTANT,
+            content=response.content,
+            classified_intent=response.classified_intent,
+            response_kind=response.response_kind,
+            citations=response.citations,
+            council_decision=response.council_decision,
+        )
     return ChatResponse(id=assistant_record.id, **response.model_dump())
 
 

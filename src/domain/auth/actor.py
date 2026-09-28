@@ -8,13 +8,20 @@ from domain.schemas.common import ActorContext
 
 
 async def resolve_actor(connection: HTTPConnection) -> ActorContext | None:
+    actor, _via_session = await resolve_websocket_actor(connection)
+    return actor
+
+
+async def resolve_websocket_actor(
+    connection: HTTPConnection,
+) -> tuple[ActorContext | None, bool]:
     settings = get_settings()
     session_token = connection.cookies.get(settings.session_cookie_name)
     if session_token:
         async with async_session_factory() as session:
-            actor = await resolve_actor_from_session_token(session, session_token)
-        if actor is not None:
-            return actor
+            session_actor = await resolve_actor_from_session_token(session, session_token)
+        if session_actor is not None:
+            return session_actor, True
 
     api_key = connection.headers.get("X-API-Key")
     if api_key:
@@ -22,9 +29,9 @@ async def resolve_actor(connection: HTTPConnection) -> ActorContext | None:
             identity = await validate_api_key(session, api_key)
         if identity is not None:
             user_id, project_id = identity
-            return ActorContext(user_id=user_id, project_id=project_id)
+            return ActorContext(user_id=user_id, project_id=project_id), False
 
-    return None
+    return None, False
 
 
 def websocket_origin_allowed(origin: str | None) -> bool:

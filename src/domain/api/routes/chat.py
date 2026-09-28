@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.websockets import WebSocket, WebSocketDisconnect
 
-from domain.auth.actor import resolve_actor, websocket_origin_allowed
+from domain.auth.actor import resolve_websocket_actor, websocket_origin_allowed
 from domain.auth.middleware import get_actor
 from domain.chat.service import get_session_messages, process_message
 from domain.council.status import STATUS_QUEUE_SENTINEL, StatusQueue
@@ -31,17 +31,16 @@ async def _cleanup_pipeline_task(task: asyncio.Task[ChatResponse] | None) -> Non
 
 @router.websocket("/ws")
 async def chat_websocket(websocket: WebSocket) -> None:
-    origin = websocket.headers.get("origin")
-    if not websocket_origin_allowed(origin):
+    actor, authenticated_via_session = await resolve_websocket_actor(websocket)
+    if actor is None:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Not authenticated")
+        return
+
+    if authenticated_via_session and not websocket_origin_allowed(websocket.headers.get("origin")):
         await websocket.close(
             code=status.WS_1008_POLICY_VIOLATION,
             reason="Origin not allowed",
         )
-        return
-
-    actor = await resolve_actor(websocket)
-    if actor is None:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Not authenticated")
         return
 
     await websocket.accept()

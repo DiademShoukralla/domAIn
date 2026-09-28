@@ -108,6 +108,26 @@ async def test_websocket_rejects_wrong_origin(db_session) -> None:
 
 
 @pytest.mark.asyncio
+async def test_websocket_accepts_api_key_without_origin(db_session) -> None:
+    await ensure_bootstrap_api_key(db_session)
+    settings = get_settings()
+    with patch("domain.chat.service.classify_intent", new_callable=AsyncMock) as classify_mock:
+        classify_mock.return_value = ChatIntent.GREETING
+        transport = ASGIWebSocketTransport(app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            async with aconnect_ws(
+                "http://test/chat/ws",
+                client,
+                headers={"X-API-Key": settings.bootstrap_api_key},
+            ) as ws:
+                await ws.send_text(json.dumps({"session_id": str(uuid4()), "content": "ping"}))
+                frame = json.loads(await ws.receive_text())
+                assert frame["classified_intent"] == ChatIntent.GREETING.value
+                assert frame["response_kind"] == ResponseKind.DIRECT_ANSWER.value
+                assert frame["id"]
+
+
+@pytest.mark.asyncio
 async def test_websocket_still_accepts_api_key_with_allowed_origin(db_session) -> None:
     await ensure_bootstrap_api_key(db_session)
     settings = get_settings()

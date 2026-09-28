@@ -35,20 +35,29 @@ OAuth connect:
 
 ## Development
 
+Install [uv](https://docs.astral.sh/uv/), then sync dependencies from the lockfile:
+
 ```bash
-pip install -e ".[dev]"
+uv sync --extra dev
 pre-commit install
 docker compose up -d db
-alembic upgrade head
-uvicorn domain.main:app --reload --app-dir src
+uv run alembic upgrade head
+uv run uvicorn domain.main:app --reload --app-dir src
 ```
+
+### Dependencies
+
+- `pyproject.toml` declares version ranges; `uv.lock` pins exact versions for CI, Docker, and local dev.
+- **Add a dependency:** edit `pyproject.toml`, then `uv lock` and commit both files.
+- **Upgrade one package deliberately:** `uv lock --upgrade-package <name>` (then run tests and commit `uv.lock`).
+- CI runs `uv lock --check` and installs with `uv sync --frozen`, so a stale lockfile fails the build.
 
 `pre-commit install` is a required one-time setup step. It installs a git hook that runs ruff (lint + format) and mypy on each commit, blocking commits that introduce lint or type errors.
 
 Run tests:
 
 ```bash
-pytest
+uv run pytest
 ```
 
 ## Architecture docs

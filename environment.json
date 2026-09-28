@@ -9,5 +9,5 @@
       "command": "docker compose up --build"
     }
   ],
-  "install": "pip install -e '.[dev]'"
+  "install": "uv sync --frozen --extra dev"
 }

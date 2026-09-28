@@ -11,14 +11,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: astral-sh/setup-uv@v5
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
+      - name: Verify lockfile is current
+        run: uv lock --check
+
       - name: Verify non-editable install
-        run: |
-          python -m pip install --upgrade pip
-          pip install --no-cache-dir .
+        run: uv sync --frozen --no-dev
 
   frontend:
     runs-on: ubuntu-latest
@@ -77,14 +80,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: astral-sh/setup-uv@v5
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
+      - name: Verify lockfile is current
+        run: uv lock --check
+
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+        run: uv sync --frozen --extra dev
 
       - name: Fetch main for test diff
         if: github.event_name == 'pull_request'
@@ -95,25 +101,25 @@ jobs:
         run: git worktree add ../domain-main origin/main
 
       - name: Lint
-        run: ruff check src tests
+        run: uv run ruff check src tests
 
       - name: Type check
-        run: mypy src/domain
+        run: uv run mypy src/domain
 
       - name: Run migrations
-        run: alembic upgrade head
+        run: uv run alembic upgrade head
 
       - name: Unit tests
         if: always()
-        run: pytest tests/unit --junitxml=unit-results.xml
+        run: uv run pytest tests/unit --junitxml=unit-results.xml
 
       - name: Integration tests
         if: always()
-        run: pytest tests/integration --junitxml=integration-results.xml
+        run: uv run pytest tests/integration --junitxml=integration-results.xml
 
       - name: Build test summary
         if: always() && github.event_name == 'pull_request'
-        run: python scripts/ci_test_summary.py unit-results.xml integration-results.xml --main-worktree ../domain-main > test-summary.md
+        run: uv run python scripts/ci_test_summary.py unit-results.xml integration-results.xml --main-worktree ../domain-main > test-summary.md
 
       - name: Remove main worktree
         if: always() && github.event_name == 'pull_request'

@@ -45,6 +45,11 @@ if [[ ! -f "$ENV_FILE" ]]; then
   exit 1
 fi
 
+if ! bash deploy/generate-env.sh --check --env-file "$ENV_FILE"; then
+  echo "ERROR: $ENV_FILE is missing required variables. Run \`bash deploy/generate-env.sh --missing\` on the droplet." >&2
+  exit 1
+fi
+
 set -a
 # shellcheck disable=SC1090
 source "$ENV_FILE"

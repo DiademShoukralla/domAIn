@@ -7,3 +7,10 @@ def test_linear_authorize_url_includes_actor_app() -> None:
     url = linear_authorize_url("test-state-token")
     query = parse_qs(urlparse(url).query)
     assert query["actor"] == ["app"]
+
+
+def test_linear_authorize_url_preserves_signed_state() -> None:
+    state = "signed-state-from-create_oauth_state"
+    url = linear_authorize_url(state)
+    query = parse_qs(urlparse(url).query)
+    assert query["state"] == [state]

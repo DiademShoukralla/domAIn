@@ -26,6 +26,7 @@ def linear_authorize_url(state: str) -> str:
     client = get_linear_oauth_client(state=state)
     uri, _ = client.create_authorization_url(
         "https://linear.app/oauth/authorize",
+        state=state,
         actor="app",
     )
     return cast(str, uri)

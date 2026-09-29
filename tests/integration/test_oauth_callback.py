@@ -1,9 +1,8 @@
 from urllib.parse import parse_qs, urlparse
+from uuid import UUID
 
 import pytest
 from httpx import ASGITransport, AsyncClient
-
-from uuid import UUID
 
 from domain.api.routes import oauth as oauth_routes
 from domain.auth import middleware as auth_middleware

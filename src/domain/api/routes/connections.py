@@ -71,6 +71,11 @@ async def list_available_sources(
     installation_id = connection.installation_id
     linear_access_token: str | None = None
     if provider == Provider.LINEAR:
+        if not connection.access_token:
+            raise HTTPException(
+                status_code=403,
+                detail="Linear connection is missing an access token. Reconnect Linear.",
+            )
         linear_access_token = await get_linear_access_token(db, connection)
 
     await db.commit()
@@ -84,8 +89,7 @@ async def list_available_sources(
                 )
             items = await fetch_github_installation_repositories(installation_id)
         elif provider == Provider.LINEAR:
-            if linear_access_token is None:
-                raise HTTPException(status_code=502, detail="Unsupported connection provider")
+            assert linear_access_token is not None
             items = await fetch_linear_teams(linear_access_token)
         else:
             raise HTTPException(status_code=502, detail="Unsupported connection provider")

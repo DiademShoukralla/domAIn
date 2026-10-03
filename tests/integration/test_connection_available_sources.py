@@ -169,6 +169,37 @@ async def test_github_available_sources_paginates_and_marks_already_added(
 
 
 @pytest.mark.asyncio
+async def test_linear_missing_access_token_returns_403_without_provider_http(
+    api_db,
+) -> None:
+    connection = Connection(
+        user_id=USER_ID,
+        provider=Provider.LINEAR,
+        access_token=None,
+        external_account_id="linear-user",
+        external_account_name="Linear User",
+    )
+    api_db.add(connection)
+    await api_db.commit()
+    await api_db.refresh(connection)
+
+    with patch("domain.connections.available_sources.httpx.AsyncClient") as client_cls:
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get(
+                f"/connections/{connection.id}/available-sources",
+                headers=API_KEY_HEADERS,
+            )
+
+    assert response.status_code == 403
+    assert (
+        response.json()["detail"]
+        == "Linear connection is missing an access token. Reconnect Linear."
+    )
+    client_cls.assert_not_called()
+
+
+@pytest.mark.asyncio
 async def test_linear_available_sources_lists_teams(linear_connection) -> None:
     def handler(method: str, url: str, kwargs: dict[str, Any]) -> httpx.Response:
         assert method == "POST"

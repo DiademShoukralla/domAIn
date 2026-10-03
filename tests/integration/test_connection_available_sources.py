@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
+from inspect import isawaitable
 from typing import Any
 from unittest.mock import AsyncMock, patch
 from uuid import uuid4
@@ -12,6 +14,7 @@ from domain.auth.api_key import ensure_bootstrap_api_key
 from domain.config import get_settings
 from domain.crypto import encrypt_token
 from domain.db.models import Connection, KnowledgeSource, Provider, SourceStatus, SourceType
+from domain.db.session import get_db
 from domain.main import app
 
 USER_ID = get_settings().default_user_id
@@ -29,10 +32,16 @@ class _MockHttpxClient:
         return None
 
     async def get(self, url: str, **kwargs: Any) -> httpx.Response:
-        return self._handler("GET", url, kwargs)
+        result = self._handler("GET", url, kwargs)
+        if isawaitable(result):
+            return await result
+        return result
 
     async def post(self, url: str, **kwargs: Any) -> httpx.Response:
-        return self._handler("POST", url, kwargs)
+        result = self._handler("POST", url, kwargs)
+        if isawaitable(result):
+            return await result
+        return result
 
 
 def _github_repositories_handler(page_responses: dict[int, dict[str, Any]]):
@@ -296,3 +305,180 @@ async def test_github_provider_rate_limit_maps_to_429(github_connection) -> None
 
     assert response.status_code == 429
     assert response.json()["detail"] == "Provider rate limit exceeded. Try again shortly."
+
+
+@pytest.mark.asyncio
+async def test_github_token_exchange_404_maps_to_403(github_connection) -> None:
+    request = httpx.Request(
+        "POST",
+        "https://api.github.com/app/installations/installation-123/access_tokens",
+    )
+    response = httpx.Response(404, request=request)
+    token_error = httpx.HTTPStatusError("Not Found", request=request, response=response)
+
+    with patch(
+        "domain.connections.available_sources.get_installation_access_token",
+        new=AsyncMock(side_effect=token_error),
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            http_response = await client.get(
+                f"/connections/{github_connection.id}/available-sources",
+                headers=API_KEY_HEADERS,
+            )
+
+    assert http_response.status_code == 403
+    assert "Reconnect GitHub" in http_response.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_github_provider_timeout_maps_to_502(github_connection) -> None:
+    async def handler(method: str, url: str, kwargs: dict[str, Any]) -> httpx.Response:
+        raise httpx.TimeoutException("timed out")
+
+    with (
+        patch(
+            "domain.connections.available_sources.get_installation_access_token",
+            new=AsyncMock(return_value="installation-token"),
+        ),
+        patch(
+            "domain.connections.available_sources.httpx.AsyncClient",
+            return_value=_MockHttpxClient(handler),
+        ),
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get(
+                f"/connections/{github_connection.id}/available-sources",
+                headers=API_KEY_HEADERS,
+            )
+
+    assert response.status_code == 502
+    assert response.json()["detail"] == "Failed to fetch available sources from the provider."
+
+
+@pytest.mark.asyncio
+async def test_linear_provider_timeout_maps_to_502(linear_connection) -> None:
+    async def handler(method: str, url: str, kwargs: dict[str, Any]) -> httpx.Response:
+        raise httpx.ConnectError("connection refused")
+
+    with patch(
+        "domain.connections.available_sources.httpx.AsyncClient",
+        return_value=_MockHttpxClient(handler),
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get(
+                f"/connections/{linear_connection.id}/available-sources",
+                headers=API_KEY_HEADERS,
+            )
+
+    assert response.status_code == 502
+    assert response.json()["detail"] == "Failed to fetch available sources from the provider."
+
+
+@pytest.mark.asyncio
+async def test_linear_graphql_auth_error_maps_to_403(linear_connection) -> None:
+    def handler(method: str, url: str, kwargs: dict[str, Any]) -> httpx.Response:
+        request = httpx.Request("POST", url)
+        return httpx.Response(
+            200,
+            json={
+                "errors": [
+                    {
+                        "message": "Authentication required",
+                        "extensions": {"code": "AUTHENTICATION_ERROR"},
+                    }
+                ]
+            },
+            request=request,
+        )
+
+    with patch(
+        "domain.connections.available_sources.httpx.AsyncClient",
+        return_value=_MockHttpxClient(handler),
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get(
+                f"/connections/{linear_connection.id}/available-sources",
+                headers=API_KEY_HEADERS,
+            )
+
+    assert response.status_code == 403
+    assert "Reconnect Linear" in response.json()["detail"]
+
+
+@pytest.mark.asyncio
+async def test_linear_graphql_other_error_maps_to_502(linear_connection) -> None:
+    def handler(method: str, url: str, kwargs: dict[str, Any]) -> httpx.Response:
+        request = httpx.Request("POST", url)
+        return httpx.Response(
+            200,
+            json={
+                "errors": [
+                    {
+                        "message": "Invalid query",
+                        "extensions": {"code": "GRAPHQL_VALIDATION_FAILED"},
+                    }
+                ]
+            },
+            request=request,
+        )
+
+    with patch(
+        "domain.connections.available_sources.httpx.AsyncClient",
+        return_value=_MockHttpxClient(handler),
+    ):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as client:
+            response = await client.get(
+                f"/connections/{linear_connection.id}/available-sources",
+                headers=API_KEY_HEADERS,
+            )
+
+    assert response.status_code == 502
+    assert response.json()["detail"] == "Failed to fetch available sources from the provider."
+
+
+@pytest.mark.asyncio
+async def test_github_provider_http_runs_without_open_db_transaction(
+    api_db, github_connection
+) -> None:
+    transaction_open_during_http: list[bool] = []
+
+    def handler(method: str, url: str, kwargs: dict[str, Any]) -> httpx.Response:
+        transaction_open_during_http.append(api_db.in_transaction())
+        request = httpx.Request(method, url)
+        return httpx.Response(
+            200,
+            json={"repositories": [{"full_name": "org/repo", "private": False}]},
+            request=request,
+        )
+
+    async def override_get_db() -> AsyncGenerator[Any, None]:
+        yield api_db
+
+    app.dependency_overrides[get_db] = override_get_db
+    try:
+        with (
+            patch(
+                "domain.connections.available_sources.get_installation_access_token",
+                new=AsyncMock(return_value="installation-token"),
+            ),
+            patch(
+                "domain.connections.available_sources.httpx.AsyncClient",
+                return_value=_MockHttpxClient(handler),
+            ),
+        ):
+            transport = ASGITransport(app=app)
+            async with AsyncClient(transport=transport, base_url="http://test") as client:
+                response = await client.get(
+                    f"/connections/{github_connection.id}/available-sources",
+                    headers=API_KEY_HEADERS,
+                )
+    finally:
+        app.dependency_overrides.clear()
+
+    assert response.status_code == 200
+    assert transaction_open_during_http == [False]

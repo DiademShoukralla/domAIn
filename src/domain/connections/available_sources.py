@@ -32,11 +32,47 @@ class ProviderRequestError(Exception):
         super().__init__(detail)
 
 
-def _map_http_status(status_code: int, access_lost_detail: str) -> ProviderRequestError:
-    if status_code in (401, 403):
-        return ProviderRequestError(403, access_lost_detail)
+LINEAR_AUTH_GRAPHQL_CODES = frozenset(
+    {
+        "AUTHENTICATION_ERROR",
+        "FORBIDDEN",
+        "JWT_EXPIRED",
+        "INVALID_SCOPE",
+        "UNAUTHENTICATED",
+    }
+)
+
+
+def map_github_token_exchange_http_status(status_code: int) -> ProviderRequestError:
+    if status_code in (401, 403, 404):
+        return ProviderRequestError(403, GITHUB_ACCESS_LOST_DETAIL)
     if status_code == 429:
         return ProviderRequestError(429, PROVIDER_RATE_LIMIT_DETAIL)
+    return ProviderRequestError(502, PROVIDER_ERROR_DETAIL)
+
+
+def map_github_resource_http_status(status_code: int) -> ProviderRequestError:
+    if status_code in (401, 403):
+        return ProviderRequestError(403, GITHUB_ACCESS_LOST_DETAIL)
+    if status_code == 429:
+        return ProviderRequestError(429, PROVIDER_RATE_LIMIT_DETAIL)
+    return ProviderRequestError(502, PROVIDER_ERROR_DETAIL)
+
+
+def map_linear_http_status(status_code: int) -> ProviderRequestError:
+    if status_code in (401, 403):
+        return ProviderRequestError(403, LINEAR_ACCESS_LOST_DETAIL)
+    if status_code == 429:
+        return ProviderRequestError(429, PROVIDER_RATE_LIMIT_DETAIL)
+    return ProviderRequestError(502, PROVIDER_ERROR_DETAIL)
+
+
+def map_linear_graphql_errors(errors: list[dict[str, Any]]) -> ProviderRequestError:
+    for error in errors:
+        extensions = cast(dict[str, Any], error.get("extensions") or {})
+        code = str(extensions.get("code", "")).upper()
+        if code in LINEAR_AUTH_GRAPHQL_CODES:
+            return ProviderRequestError(403, LINEAR_ACCESS_LOST_DETAIL)
     return ProviderRequestError(502, PROVIDER_ERROR_DETAIL)
 
 
@@ -109,7 +145,9 @@ async def fetch_github_installation_repositories(installation_id: str) -> list[A
     try:
         access_token = await get_installation_access_token(installation_id)
     except httpx.HTTPStatusError as exc:
-        raise _map_http_status(exc.response.status_code, GITHUB_ACCESS_LOST_DETAIL) from exc
+        raise map_github_token_exchange_http_status(exc.response.status_code) from exc
+    except httpx.RequestError as exc:
+        raise ProviderRequestError(502, PROVIDER_ERROR_DETAIL) from exc
     headers = {
         "Authorization": f"Bearer {access_token}",
         "Accept": "application/vnd.github+json",
@@ -117,21 +155,24 @@ async def fetch_github_installation_repositories(installation_id: str) -> list[A
     pages: list[list[dict[str, Any]]] = []
     page = 1
 
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        while True:
-            response = await client.get(
-                f"{GITHUB_API_BASE}/installation/repositories",
-                headers=headers,
-                params={"per_page": GITHUB_REPOS_PER_PAGE, "page": page},
-            )
-            if response.status_code >= 400:
-                raise _map_http_status(response.status_code, GITHUB_ACCESS_LOST_DETAIL)
-            payload = cast(dict[str, Any], response.json())
-            batch = cast(list[dict[str, Any]], payload.get("repositories", []))
-            pages.append(batch)
-            if len(batch) < GITHUB_REPOS_PER_PAGE:
-                break
-            page += 1
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            while True:
+                response = await client.get(
+                    f"{GITHUB_API_BASE}/installation/repositories",
+                    headers=headers,
+                    params={"per_page": GITHUB_REPOS_PER_PAGE, "page": page},
+                )
+                if response.status_code >= 400:
+                    raise map_github_resource_http_status(response.status_code)
+                payload = cast(dict[str, Any], response.json())
+                batch = cast(list[dict[str, Any]], payload.get("repositories", []))
+                pages.append(batch)
+                if len(batch) < GITHUB_REPOS_PER_PAGE:
+                    break
+                page += 1
+    except httpx.RequestError as exc:
+        raise ProviderRequestError(502, PROVIDER_ERROR_DETAIL) from exc
 
     return merge_github_repository_pages(pages)
 
@@ -148,30 +189,41 @@ async def fetch_linear_teams(access_token: str) -> list[AvailableSourceItem]:
     items: list[AvailableSourceItem] = []
     after: str | None = None
 
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        while True:
-            response = await client.post(
-                "https://api.linear.app/graphql",
-                headers={"Authorization": f"Bearer {access_token}"},
-                json={
-                    "query": query,
-                    "variables": {"after": after, "first": LINEAR_TEAMS_PAGE_SIZE},
-                },
-            )
-            if response.status_code >= 400:
-                raise _map_http_status(response.status_code, LINEAR_ACCESS_LOST_DETAIL)
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            while True:
+                response = await client.post(
+                    "https://api.linear.app/graphql",
+                    headers={"Authorization": f"Bearer {access_token}"},
+                    json={
+                        "query": query,
+                        "variables": {"after": after, "first": LINEAR_TEAMS_PAGE_SIZE},
+                    },
+                )
+                if response.status_code >= 400:
+                    raise map_linear_http_status(response.status_code)
 
-            payload = cast(dict[str, Any], response.json())
-            if payload.get("errors"):
-                raise ProviderRequestError(502, PROVIDER_ERROR_DETAIL)
+                payload = cast(dict[str, Any], response.json())
+                errors = cast(list[dict[str, Any]], payload.get("errors") or [])
+                if errors:
+                    raise map_linear_graphql_errors(errors)
 
-            teams_data = cast(dict[str, Any], payload["data"]["teams"])
-            for team in cast(list[dict[str, Any]], teams_data.get("nodes", [])):
-                items.append(linear_team_payload_to_item(team))
+                data = payload.get("data")
+                if data is None:
+                    raise ProviderRequestError(502, PROVIDER_ERROR_DETAIL)
 
-            page_info = cast(dict[str, Any], teams_data["pageInfo"])
-            if not page_info.get("hasNextPage"):
-                break
-            after = cast(str | None, page_info.get("endCursor"))
+                teams_data = data.get("teams")
+                if teams_data is None:
+                    raise ProviderRequestError(502, PROVIDER_ERROR_DETAIL)
+
+                for team in cast(list[dict[str, Any]], teams_data.get("nodes", [])):
+                    items.append(linear_team_payload_to_item(team))
+
+                page_info = cast(dict[str, Any], teams_data.get("pageInfo") or {})
+                if not page_info.get("hasNextPage"):
+                    break
+                after = cast(str | None, page_info.get("endCursor"))
+    except httpx.RequestError as exc:
+        raise ProviderRequestError(502, PROVIDER_ERROR_DETAIL) from exc
 
     return items

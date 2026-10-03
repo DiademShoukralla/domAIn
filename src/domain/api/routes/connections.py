@@ -67,24 +67,33 @@ async def list_available_sources(
 
     existing = await load_existing_sources_by_ref(db, connection_id, actor)
 
+    provider = connection.provider
+    installation_id = connection.installation_id
+    linear_access_token: str | None = None
+    if provider == Provider.LINEAR:
+        linear_access_token = await get_linear_access_token(db, connection)
+
+    await db.commit()
+
     try:
-        if connection.provider == Provider.GITHUB:
-            if not connection.installation_id:
+        if provider == Provider.GITHUB:
+            if not installation_id:
                 raise HTTPException(
                     status_code=403,
                     detail="GitHub connection is missing an installation. Reconnect GitHub.",
                 )
-            items = await fetch_github_installation_repositories(connection.installation_id)
-        elif connection.provider == Provider.LINEAR:
-            access_token = await get_linear_access_token(db, connection)
-            items = await fetch_linear_teams(access_token)
+            items = await fetch_github_installation_repositories(installation_id)
+        elif provider == Provider.LINEAR:
+            if linear_access_token is None:
+                raise HTTPException(status_code=502, detail="Unsupported connection provider")
+            items = await fetch_linear_teams(linear_access_token)
         else:
             raise HTTPException(status_code=502, detail="Unsupported connection provider")
     except ProviderRequestError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
 
     return AvailableSourcesResponse(
-        provider=connection.provider,
+        provider=provider,
         items=mark_already_added(items, existing),
     )
 

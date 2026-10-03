@@ -2,6 +2,12 @@ from datetime import UTC, datetime
 from uuid import uuid4
 
 from domain.connections.available_sources import (
+    GITHUB_ACCESS_LOST_DETAIL,
+    LINEAR_ACCESS_LOST_DETAIL,
+    PROVIDER_ERROR_DETAIL,
+    map_github_resource_http_status,
+    map_github_token_exchange_http_status,
+    map_linear_graphql_errors,
     mark_already_added,
     merge_github_repository_pages,
 )
@@ -59,3 +65,31 @@ def test_merge_github_repository_pages_across_multiple_pages() -> None:
     assert items[0].updated_at == datetime(2026, 1, 1, 0, 0, tzinfo=UTC)
     assert items[1].external_ref == "org/repo-two"
     assert items[1].name == "org/repo-two"
+
+
+def test_map_github_token_exchange_http_status_maps_404_to_403() -> None:
+    error = map_github_token_exchange_http_status(404)
+    assert error.status_code == 403
+    assert error.detail == GITHUB_ACCESS_LOST_DETAIL
+
+
+def test_map_github_resource_http_status_maps_404_to_502() -> None:
+    error = map_github_resource_http_status(404)
+    assert error.status_code == 502
+    assert error.detail == PROVIDER_ERROR_DETAIL
+
+
+def test_map_linear_graphql_errors_maps_auth_codes_to_403() -> None:
+    error = map_linear_graphql_errors(
+        [{"message": "not allowed", "extensions": {"code": "FORBIDDEN"}}]
+    )
+    assert error.status_code == 403
+    assert error.detail == LINEAR_ACCESS_LOST_DETAIL
+
+
+def test_map_linear_graphql_errors_maps_other_codes_to_502() -> None:
+    error = map_linear_graphql_errors(
+        [{"message": "bad input", "extensions": {"code": "INPUT_ERROR"}}]
+    )
+    assert error.status_code == 502
+    assert error.detail == PROVIDER_ERROR_DETAIL
